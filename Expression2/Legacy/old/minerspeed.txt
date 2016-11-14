@@ -1,0 +1,27 @@
+@name MinerSpeed
+@inputs [GPS1 GPS2]:vector [Switch On]:number
+@outputs Speed Max MaxSpeed
+@persist [GPS FLV FV EV]:vector E:entity 
+@trigger
+runOnTick(1)
+
+GPS=(Switch ? GPS1 : GPS2)
+if(first()){
+    E=entity():isWeldedTo()
+    E:setMass(10000)
+    Max=200/10
+}
+
+if(On){
+    FLV=clamp((GPS+vec(0,0,200))-E:pos(),-Max,Max)
+    Speed=-clamp((Max-abs(E:vel():length()))/Max,-1,0)
+    FV=(10*FLV+$FLV*10)
+    EV=-E:vel()*Speed
+    E:applyForce((FV+EV)*E:mass())
+    
+    TarQ = quat(vec(5,0,1))
+    CurQ = quat(E)
+    Q = TarQ/CurQ
+    V = E:toLocal(rotationVector(Q)+E:pos())
+    E:applyTorque((250*V - 35*E:angVelVector())*E:inertia())  
+}

@@ -1,0 +1,13 @@
+@name Trigger Timer (Core Version)
+@inputs [Shield Time]:number
+@outputs On
+@persist 
+@trigger 
+
+if($Shield<0){
+    timer("Trigger",Time*1000)
+    On=1
+}
+if(clk("Trigger")){
+    On=0
+}

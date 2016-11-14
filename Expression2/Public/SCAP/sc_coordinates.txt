@@ -1,0 +1,62 @@
+@name sc coordinates by XrayIndia
+@inputs Menu:string
+@outputs Coord:vector
+@persist Dest Target Anim
+@trigger none
+
+#[
+
+SpaceCraft Coordinates by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+
+interval(100)
+
+Hindex=2300
+
+Coord=owner():aimPos()
+
+Dest= (Menu=="Dest1set" | Menu =="Dest2set")
+
+
+Target= (Menu=="Targetset")
+
+if((Dest & $Dest) | (Target & $Target))
+{
+    holoCreate(Hindex+1)
+    holoDisableShading(Hindex+1,1)
+    holoColor(Hindex+1,vec(255,0,0),100)
+    Anim=200
+}
+
+if(Dest)
+{
+    Anim-=20
+    if(Anim<1){Anim=200}
+    
+    holoModel(Hindex+1,"hq_torus_thin")
+    holoPos(Hindex+1,Coord+4*owner():aimNormal() )
+    holoAng(Hindex+1, ang(90,0,0)+owner():aimNormal():toAngle()  )
+    holoScaleUnits(Hindex+1,vec(Anim,Anim,Anim) )
+}
+
+if(Target)
+{
+    holoModel(Hindex+1,"cube")
+    holoScaleUnits(Hindex+1,1.2*owner():aimEntity():boxSize())
+    holoAng(Hindex+1, owner():aimEntity():angles())
+    holoPos(Hindex+1,owner():aimEntity():boxCenterW())
+}
+
+if(!Dest & !Target & ($Dest|$Target) )
+{
+    holoDelete(Hindex+1)
+}

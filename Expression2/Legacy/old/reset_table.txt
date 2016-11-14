@@ -1,0 +1,10 @@
+@name Reset Table
+@inputs 
+@outputs [TableID Test]:string
+@persist [Table]:table [GTable]:gtable
+@trigger 
+    gRemoveAll()
+    GTable=gTable("System",0)
+    GTable["Table",table]=table()
+    Table=GTable["Table",table]
+    TableID=Table:id()

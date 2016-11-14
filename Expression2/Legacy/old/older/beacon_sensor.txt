@@ -1,0 +1,11 @@
+@name Beacon Sensor
+@inputs Entity:entity
+@outputs Heading:angle Bearing:number Elevation:number Distance:number
+@persist 
+@trigger 
+@model models/jaanus/wiretool/wiretool_speed.mdl
+runOnTick(1)
+Heading=entity():heading(Entity:pos())
+Bearing=Heading:yaw()
+Elevation=Heading:pitch()
+Distance=entity():pos():distance(Entity:pos())

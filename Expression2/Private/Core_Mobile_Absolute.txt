@@ -1,0 +1,87 @@
+@name Core Mobile Absolute
+@inputs [Eye Cam Pod]:wirelink [PodActive]:number #Core
+@inputs [Ctrl MCtrl Aux MVec]:vector #Controls
+@persist [CoreB CoreM]:entity #Core
+@persist [Cam1 Cam2]:entity [CamMode]:number #Camera
+@outputs [AT]:angle [VT]:vector #Debug
+
+#Core
+    if(dupefinished()){ #Duped
+        reset()
+    }
+    if(first()){
+        runOnTick(1)
+        CoreB = entity():isWeldedTo()
+        CoreM = holoCreate(1,CoreB:pos(),vec(1),CoreB:angles())
+        holoModel(1,"icosphere") 
+        Eye["Enable",number] = 1
+        Pod["Crosshairs",number] = 1
+    }
+
+#Camera
+    if(first()){
+        VCam1 = CoreM:pos()+CoreM:forward()*50
+        Cam1 = holoCreate(100,VCam1,vec(),CoreM:angles())
+        VCam2 = CoreM:pos()+CoreM:forward()*-100+CoreM:up()*25
+        Cam2 = holoCreate(101,VCam2,vec(),CoreM:angles())
+        holoParent(100,CoreM)
+        holoParent(101,CoreM)
+        Cam["Parent",entity] = CoreM
+        Cam["Position",vector] = Cam2:pos()
+        Cam["Angle",angle] = CoreM:angles()
+    }
+    if(~PodActive){
+        Cam["Activated",number] = PodActive
+    }
+    if(~Aux&Aux:x()){
+        CamMode = (CamMode ? 0 : 1)
+        if(CamMode){
+            Cam["Position",vector] = Cam1:pos()
+        }else{
+            Cam["Position",vector] = Cam2:pos()
+        }
+    }
+
+#Orientation - Absolute
+    #Assignment
+    if(tickClk()){
+        if(PodActive){
+            AT = AT+ang(MVec)/2
+            ATRoll = -(CoreM:velL():y())
+            AT = AT:setRoll(ATRoll/200)
+            ATClamp = ang(90,180,35)
+            AT = clamp(angnorm(AT),-ATClamp,ATClamp)
+        }else{
+            AT = ang()
+        }
+    }
+    #Engine
+    if(tickClk()){
+        holoAng(1,AT)
+        QT = quat(AT)
+        QC = quat(CoreB)
+        Q=QT/QC
+        QV=CoreB:toLocal(rotationVector(Q)+CoreB:pos())
+        CoreB:applyTorque((200*QV-50*CoreB:angVelVector())*CoreB:inertia())
+    }
+
+#Movement - Absolute
+    #Assignment
+    if(tickClk()){
+        if(PodActive){
+            if(Ctrl){
+                VT = CoreM:pos()
+                VTMod = (Aux:z() ? 2.5 : 1) * 10
+                VT += Ctrl:x()*CoreM:right()*VTMod
+                VT += Ctrl:y()*CoreM:forward()*VTMod
+                VT += Ctrl:z()*CoreM:up()*VTMod
+            }
+        }else{
+            VT = CoreB:pos()
+        }
+    }
+    #Engine
+    if(tickClk()){
+        holoPos(1,VT)
+        CoreB:applyForce((VT-CoreB:pos()-CoreB:vel()*0.15)*CoreB:mass())
+    }

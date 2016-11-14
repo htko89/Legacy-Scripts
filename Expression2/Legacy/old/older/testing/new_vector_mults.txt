@@ -1,0 +1,36 @@
+@name Vector Force
+@inputs Run:number
+@outputs [ForwardVec Error Inertia]:vector Leverage:number
+@persist [Inertia FixVec TargetVec]:vector [Leverage DMul FMul]:number Ent:entity
+@trigger Run
+@model models/hunter/blocks/cube025x05x025.mdl
+
+runOnTick(1)
+
+
+
+if(Run){
+    #Define variables.
+    Ent=entity() 
+    Inertia=Ent:inertia()
+    Leverage=Ent:inertia():length()
+    Leverage=Leverage #Leverage Multiplier.
+    DMul=12000 #Delta Multiplier.
+    FMul=1000 #Force qMultiplier.
+    TargetVec=owner():eye()
+    
+    #Define positions.
+    CenterPos=Ent:massCenter() #Get center of mass position.
+    RightVec=Ent:forward() #Get "right" vector for ent.
+    ForwardVec=-Ent:right() #Get "forward" vector for ent. (negative for left down and backward)
+    UpVec=Ent:up() #Get "up" vector for ent.
+    
+    #Calculate fix.
+    FixVec=TargetVec-ForwardVec #Get fix direction towards target.
+    WorkVec=$FixVec*DMul+FixVec*FMul #Multipliers.
+    
+    #Apply force.
+    Ent:applyOffsetForce(WorkVec,CenterPos+ForwardVec*Leverage) #Apply force in front.
+    Ent:applyOffsetForce(-WorkVec,CenterPos-ForwardVec*Leverage) #Apply force behind.
+    Error=(ForwardVec-TargetVec)*100000
+}

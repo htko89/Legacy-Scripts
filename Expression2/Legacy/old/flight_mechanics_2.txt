@@ -1,0 +1,44 @@
+@name Flight Mechanics 2
+#Inputs
+@inputs [Gyro]:wirelink
+@inputs [TarPos AimPos]:vector
+#Core
+@persist [Mode]:number [AimAng]:angle
+@persist [C]:entity [CPos]:vector [CAng]:angle
+@outputs [TarPosL]:vector [AimAngL]:angle
+@persist 
+@trigger 
+if(dupefinished()){ #Duped
+    reset()
+}
+if(first()){
+    runOnTick(1)
+    C = Gyro:entity()
+    Mode = 1 # 1 = Absolute, 2 = Free flight
+}
+if(tickClk()|first()){
+    CPos = C:pos()
+    CAng = C:angles()
+    TarPosL = C:toLocal(TarPos+$TarPos*10)
+    TarPosL+= TarPosL-C:velL()
+    AimAng = (AimPos-CPos):toAngle()
+    AimAngL = C:toLocal(AimAng+$AimAng*10)
+    AimAngL = AimAngL:setRoll((abs(CAng:pitch()) < 85 ? 0-CAng:roll() : 0))
+}
+if(first()){
+    Gyro["PitchMult",number] = 0.01
+    Gyro["YawMult",number] = 0.01
+    Gyro["RollMult",number] = 0.01
+}
+if(Mode == 1){
+    if(tickClk()){
+        Gyro["Lateral",number] = -TarPosL:y()
+        Gyro["SpeedAbs",number] = TarPosL:x()
+        Gyro["Vertical",number] = TarPosL:z()
+        Gyro["PitchAbs",number] = AimAngL:pitch()
+        Gyro["YawAbs",number] = AimAngL:yaw()
+        Gyro["RollAbs",number] = AimAngL:roll()
+    }
+}elseif(Mode == 2){
+    #
+}

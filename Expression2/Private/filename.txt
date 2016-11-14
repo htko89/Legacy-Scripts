@@ -1,0 +1,7 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+if(first()){holoCreate(1), holoModel(1,"models/props_c17/Lockers001a.mdl"), holoParent(1,entity())}

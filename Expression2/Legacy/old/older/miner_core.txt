@@ -1,0 +1,128 @@
+#Name
+@name Miner Core
+
+#Controls
+@inputs [Aux Ent]:wirelink [ShipReset]:number
+
+#Ship and Waypoint
+@persist [Ship ShipEnt ShipWaypoint]:gtable
+@persist [WaypointPosition WaypointBusy WaypointAngle]:gtable
+@persist [System]:gtable
+
+#Awareness
+@persist [ShipCore]:entity [ShipPosition]:vector [ShipMass]:number
+@persist [ShipForward ShipRight ShipUp]:vector
+@persist [ShipNumber]:number
+
+#Angle and Thrust
+@persist [Angle]:angle [Thrust]:vector
+
+@outputs [ShipWay]:number [ShipWayPos]:vector
+
+#Triggers
+@trigger ShipReset
+runOnTick(1)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    #Set gtables
+    Ship=gTable("Ship",0)
+    ShipEnt=gTable("ShipEnt",0)
+    ShipWaypoint=gTable("ShipEnt",0)
+    WaypointPosition=gTable("WaypointPosition",0)
+    WaypointBusy=gTable("WaypointBusy",0)
+    WaypointAngle=gTable("WaypointAngle",0)
+    System=gTable("System",0)
+    #Set Constants
+    ShipCore=Ent["Entity1",entity]
+    ShipMass=10000
+    #Set Mass
+    ShipCore:setMass(ShipMass) #ShipCore
+    for(Loop=1,ShipCore:hasConstraints("Weld")){
+        ShipCore:isWeldedTo(Loop):setMass(1)
+    } Loop=0
+    #Set Ship
+    while(!ShipNumber){
+        Loop++
+        if(!Ship[Loop,number]){
+            Ship[Loop,number]=1
+            ShipEnt[Loop,entity]=ShipCore
+            ShipNumber=Loop
+        }
+    } Loop=0
+    #Set Initial Waypoint
+    ShipWaypoint[ShipNumber,number]=1
+}
+
+#Reset
+if(ShipReset){
+    reset()
+}
+#tofix: actual waypoint scenarios, base refuel scenario, control, speed, safe removal
+
+#Set Variables
+ShipPosition=ShipCore:pos()+vec(0,0,System[6,number])
+ShipDistance=ShipPosition:distance(WaypointPosition[ShipWaypoint[ShipNumber,number],vector])
+ShipForward=ShipCore:forward()
+ShipRight=ShipCore:right()
+ShipUp=ShipCore:up()
+
+#Set Scenario
+Thrust=WaypointPosition[ShipWaypoint[ShipNumber,number],vector]-ShipPosition
+Angle=Thrust:toAngle()
+if(ShipWaypoint[ShipNumber,number]<=System[1,number]){
+    if(ShipDistance<=System[3,number]){
+        Angle=WaypointAngle[ShipWaypoint[ShipNumber,number],angle]
+        if(ShipWaypoint[ShipNumber,number]==4){
+            if(!WaypointBusy[ShipWaypoint[ShipNumber,number]+1,number]){
+                WaypointBusy[ShipWaypoint[ShipNumber,number],number]=0
+                ShipWaypoint[ShipNumber,number]=ShipWaypoint[ShipNumber,number]+1
+                WaypointBusy[ShipWaypoint[ShipNumber,number],number]=1
+            }
+        }elseif(ShipWaypoint[ShipNumber,number]==5){
+            for(Loop=1,System[2,number]){
+                if(!WaypointBusy[System[1,number]+Loop,number]){
+                    WaypointBusy[ShipWaypoint[ShipNumber,number],number]=0
+                    ShipWaypoint[ShipNumber,number]=System[1,number]+Loop
+                    WaypointBusy[ShipWaypoint[ShipNumber,number],number]=1
+                }
+            } Loop=0
+        }else{
+            if(!WaypointBusy[ShipWaypoint[ShipNumber,number]+1,number]){
+                WaypointBusy[ShipWaypoint[ShipNumber,number],number]=0
+                ShipWaypoint[ShipNumber,number]=ShipWaypoint[ShipNumber,number]+1
+                WaypointBusy[ShipWaypoint[ShipNumber,number],number]=1
+            }
+        }
+    }
+}
+if(ShipWaypoint[ShipNumber,number]>=System[1,number]){
+    if(ShipDistance<=System[3,number]){
+        Angle=WaypointAngle[ShipWaypoint[ShipNumber,number],angle]
+        if(!WaypointBusy[1,number]){
+            WaypointBusy[ShipWaypoint[ShipNumber,number],number]=0
+            ShipWaypoint[ShipNumber,number]=ShipWaypoint[ShipNumber,number]+1
+            WaypointBusy[ShipWaypoint[ShipNumber,number],number]=1
+        }
+    }
+}
+if(WaypointBusy[ShipWaypoint[ShipNumber,number],number]){
+    Angle=ShipForward:toAngle()
+    Thrust=vec(0,0,0)
+}
+
+TarQ=quat(Angle)
+CurQ=quat(ShipCore)
+Quat=TarQ/CurQ 
+Vec=ShipCore:toLocal(rotationVector(Quat)+ShipPosition) 
+ShipCore:applyTorque((200*Vec-10*ShipCore:angVelVector())*ShipCore:inertia())
+#Thrust=clamp(Thrust,-System[4,number],System[4,number])
+ShipCore:applyForce((Thrust+$Thrust*10)*ShipMass)
+#if(ShipCore:vel():length()>System[4,number]){
+#    ShipCore:applyForce((System[4,number]-ShipCore:vel():length())*-ShipCore:vel()*ShipCore:mass())
+#}

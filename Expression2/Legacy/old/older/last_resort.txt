@@ -1,0 +1,34 @@
+@name Last Resort
+@inputs Hull
+@outputs Explode
+@persist 
+@trigger 
+
+interval(50)
+if(Hull & Hull < 50)
+{EE2 = entity():isConstrainedTo(1)
+    A = EE2:getConstraints()
+    for(I = 1,A:count()){
+        A[I,entity]:deparent()
+        EE2:deparent()
+        Explode = 1
+        
+        
+    }
+    
+}else{Explode = 0}
+
+#[
+    The options menu has been redesigned - it's much more
+    organized now.
+
+    Auto completion has been added!
+    Options for it can be found in the options menu.
+
+    Syntax highlighting color options have been added in the
+    options menu.
+
+    Documentation and examples are available at:
+    http://wiki.garrysmod.com/?title=Wire_Expression2
+    The community is available at http://www.wiremod.com
+]#

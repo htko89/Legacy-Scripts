@@ -1,0 +1,16 @@
+@name Table 1
+@inputs 
+@outputs [TableID Test Test2]:string
+@persist [Table]:table [GTable]:gtable
+@trigger 
+if(first()){
+    GTable=gTable("GTable",0)
+    Table=GTable["Table",table]
+    TableID=Table:id()
+}
+timer("woot",1000)
+if(clk("woot")){
+    Table[1,string]="boobies"
+    Test=Table[1,string]
+    Test2=Table[2,string]
+}

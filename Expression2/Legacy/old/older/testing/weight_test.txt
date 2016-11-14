@@ -1,0 +1,15 @@
+@name Weight Test
+@inputs E:entity R:number
+@outputs Mass:number
+@persist TargetMass:number
+@trigger all
+
+runOnTick(1)
+
+TargetMass=50
+
+if(R){
+    E:setMass(TargetMass) 
+}
+
+Mass=E:mass()

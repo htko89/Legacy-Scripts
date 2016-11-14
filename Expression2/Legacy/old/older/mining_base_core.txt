@@ -1,0 +1,73 @@
+#Name
+@name Mining Base Core
+
+#Parented Links
+@inputs [Core Ent Cache Raw Storage]:wirelink
+@outputs [Mine Refine]:number
+
+#Normal I/O
+@outputs [Reg Equipped Set]:number
+@persist [BaseCore Owner]:entity [MinCache]:number [Offset]:array
+
+#Trigger
+@trigger none
+
+runOnTick(1)
+timer("Interval",1000)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    MinCache=5000
+    BaseCore=Ent["Entity1",entity]
+    Owner=owner()
+    BaseCore:setMass(10000)
+    BaseCore:propFreeze(1)
+    for(Loop=1,BaseCore:hasConstraints("Weld")){
+        BaseCore:isWeldedTo(Loop):setMass(1)
+        BaseCore:isWeldedTo(Loop):propFreeze(1)
+        Offset[Loop,vector]=BaseCore:pos()-BaseCore:isWeldedTo(Loop):pos()
+        Offset[Loop,vector]=Offset[Loop,vector]:setZ(-Offset[Loop,vector]:z())
+    }
+}
+
+#Resource Check
+if(clk("Interval")){
+    BlueIce=Raw["Blue Ice",number]/Raw["Max Blue Ice",number]
+    ClearIce=Raw["Clear Ice",number]/Raw["Max Clear Ice",number]
+    GlacialMass=Raw["Glacial Mass",number]/Raw["Max Glacial Mass",number]
+    WhiteGlaze=Raw["White Glaze",number]/Raw["Max White Glaze",number]
+    DarkGlitter=Raw["Dark Glitter",number]/Raw["Max Dark Glitter",number]
+    Gelidus=Raw["Gelidus",number]/Raw["Max Gelidus",number]
+    Krystallos=Raw["Krystallos",number]/Raw["Max Krystallos",number]
+    SC=Storage["Strontium Clathrates",number]/Storage["Max Strontium Clathrates",number]
+    HydrogenIsotopes=Storage["Hydrogen Isotopes",number]/Storage["Max Hydrogen Isotopes",number]
+    NitrogenIsotopes=Storage["Nitrogen Isotopes",number]/Storage["Max Nitrogen Isotopes",number]
+    OxygenIsotopes=Storage["Oxygen Isotopes",number]/Storage["Max Oxygen Isotopes",number]
+    HeliumIsotopes=Storage["Helium Isotopes",number]/Storage["Max Helium Isotopes",number]
+    LiquidOzone=Storage["Liquid Ozone",number]/Storage["Max Liquid Ozone",number]
+    HeavyWater=Storage["Heavy Water",number]
+    Energy=Cache["Energy",number]
+    Coolant=Cache["Coolant",number]
+    Air=Cache["Air",number]
+}
+if(clk("Interval")){
+    Refine=(Energy>MinCache&(BlueIce+ClearIce+GlacialMass+WhiteGlaze+DarkGlitter+Gelidus+Krystallos) ? 1 : 0)
+    Mine=Energy>MinCache
+    Reg=(Energy>MinCache&Coolant>MinCache&Air>MinCache ? 1 : 0)
+}
+Equipped=Owner:weapon():type():find("laser")
+Set=Owner:keyAttack1()
+if(Equipped&Set){
+    timer("SetPos",250)
+}
+if(clk("SetPos")){
+    BaseCore:setPos(Owner:aimPos())
+    for(Loop=1,BaseCore:hasConstraints("Weld")){
+        BaseCore:isWeldedTo(Loop):setPos(Owner:aimPos()+Offset[Loop,vector])
+    }
+}

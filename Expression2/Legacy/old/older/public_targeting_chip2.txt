@@ -1,0 +1,188 @@
+@name Public Targeting Chip2
+@inputs CycleForward CycleBackword
+@outputs Target:entity Name:string
+@persist Pos:vector X Y Z CyclePos CycleMax FreindlyFire
+@persist Class:string Player:string FindPlayer AllPlayers
+@persist FreindlyFactions:array FreindlyPlayers:array
+O = entity():owner()
+
+##Config
+Hide_Chat_Commands = 1
+
+PTC_Prefix = "/"        #Must Be 1+ character
+
+
+#When FoF Is Active You Will Not Target These Factions
+    #Note: not full name just faction ticker
+    #Example FreindlyFactions[3,string] = "-RF-"
+    FreindlyFactions[1,string] = O:team():teamName() 
+
+#When FoF Is Active You Will Not Target These Players
+    #Example FreindlyPlayers[1,string] = "Meatloaf"
+    FreindlyPlayers[1,string] = O:name()
+
+##End Config
+
+runOnChat(1)
+runOnTick(Target != noentity())
+
+H = Hide_Chat_Commands
+P = PTC_Prefix
+
+if (first() | duped()) {
+    print("For Help with the Public Targeting Chip, Type "+P+"h")
+    Class = "ship_core_*"
+    CyclePos = 1
+    CycleMax = 1
+    Name = "No Target"
+    AllPlayers = 1
+    Find = 1
+}
+
+if (chatClk(O) & lastSaid():lower():sub(1,P:length()) == P) {
+    C = lastSaid():lower():sub(P:length()+1)
+    
+    #Help
+    if ( C:index(1) == "h") {
+        hideChat(1)
+        print(" ")
+        print(" ")
+        print(" ")
+        print("*****Public Targeting Chip Help*****")
+        print(" ")
+        print("Select Target Class: '"+P+"c <Entity Class>'")
+        print("   Quick Commands: 'Core' & 'Player' in place of <EC>")
+        print(" ")
+        print("Select Player: '"+P+":c <Player Name>'")
+        print("   This command filters the selection by owner")
+        print("   '*' can be used to target all players")
+        print(" ")
+        print("Set Cycle Position: '"+P+"n <Number>'")
+        print("   Alternativly you can use the chip inputs to scroll through targets")
+        print(" ")
+        print("Toggle FoF Targeting: '"+P+"f'")
+        print("   Freind or Foe can be configured in chip Config")
+        print("*****Created By Meatloaf*****")
+        print(" ")
+        print("Check Console for full Help")
+    }
+    
+    #Select Class
+    if ( C:index(1) == "c") {
+        hideChat(H)
+        I = C:sub(2):trim()
+        if (I == "player" | I == "players") {
+            FindPlayer = 1
+            AllPlayers = 1
+            CyclePos = 1
+            CycleMax = 1
+            if (AllPlayers) {
+                Class = "player"   
+            }
+            print("Now Targeting: Players")
+        } else {
+            if (I == "core") {
+                Class = "ship_core_*"
+            } else {
+                Class = I
+            }
+            FindPlayer = 0
+            print("Now Targeting: "+Class)
+        }
+        
+    }
+    
+    #Select Player
+    if ( C:index(1) == "p") {
+        hideChat(H)
+        I = C:sub(2):trim()
+        if (I == "*") {
+            findClearBlackList(),findClearWhiteList() 
+            AllPlayers = 1
+            print("Now Targeting: All Players")
+            if (FindPlayer) {
+                Class = "player"
+            }
+        } else {
+            Player = C:sub(2):trim()
+            findClearBlackList(),findClearWhiteList()
+            findIncludePlayerProps(Player)
+            AllPlayers = 0
+            print("Now Targeting: "+Player)
+        }
+    }
+    
+    #Toggle Freindly Fire
+    if (C:index(1) == "f") {
+        findClearBlackList(),findClearWhiteList() 
+        FreindlyFire = !FreindlyFire
+        if (FreindlyFire) {
+            print("FoF Filtering Enabled: Freindly's Will Not Be Targeted")
+        } else {
+            print("FoF Filtering Disabled: Freindly's Will Be Targeted")
+        }
+    }
+    
+    #Set Cycle Pos
+    if (C:index(1) == "n") {
+        hideChat(H)
+        CyclePos = C:sub(2):trim():toNumber()
+        if (CyclePos < 1) {CyclePos = CycleMax}
+        if (CyclePos > CycleMax) {CyclePos = 1}   
+    }
+    Find = 1
+}
+
+if (CycleForward & ~CycleForward) {
+    Find = 1
+    CyclePos++
+    if (CyclePos > CycleMax) {CyclePos = 1}
+}
+
+if (CycleBackword & ~CycleBackword) {
+    Find = 1
+    CyclePos--
+    if (CyclePos < 1) {CyclePos = CycleMax}
+}
+
+if (Find) {
+    findExcludeClass("ship_core_base") 
+    findExcludePlayerProps(O:name())
+    
+    if (FreindlyFire) {
+        foreach (K,V:string=FreindlyPlayers) {
+            findExcludePlayerProps(V)
+        }
+        foreach (K,V:string=FreindlyFactions) {
+            foreach (K2,V2:entity=players()) {
+                if (V2:team():teamName() == V) {
+                    findExcludePlayerProps(V2:name())
+                }
+            }
+        }
+    }
+    
+    if (FindPlayer & !AllPlayers) {
+        Target = findPlayerByName(Player)
+    } else {
+        CycleMax = findByClass(Class)
+        Target = findResult(CyclePos)
+    }
+    
+    if (Target != noentity()) {
+        if (Target:isPlayer()) {
+            Name = Target:name()
+        } else {
+            Name = Target:owner():name()+"'s "+Target:type()
+        }
+    } else {
+        Name = "No Target"
+    }
+}
+Pos = Target:pos()
+
+X = Pos:x()
+Y = Pos:y()
+Z = Pos:z()
+
+#Made By Meatloaf

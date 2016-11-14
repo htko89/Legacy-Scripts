@@ -1,0 +1,25 @@
+@name Miner Control
+@inputs 
+@outputs 
+@persist [Drones Positions]:gtable
+@persist [DronePos]:array
+@persist [BasePos IcePos]:array
+@trigger 
+
+runOnTick(1)
+
+if(first()){
+    Drones = gTable("Drones",0)
+    Positions = gTable("Positions",0)
+    Drones[1,array]=DronePos
+    Positions[1,array]=BasePos
+    Positions[2,array]=IcePos
+}
+DronePos=Drones[1,array]
+BasePos=Positions[1,array]
+IcePos=Positions[2,array]
+
+
+Drones[1,array]=DronePos
+Positions[1,array]=BasePos
+Positions[2,array]=IcePos

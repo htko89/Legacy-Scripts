@@ -1,0 +1,34 @@
+@name Set Mass
+@inputs Generate Life Pressure
+@outputs On On2 Air
+@persist 
+@trigger 
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+if(first()){
+    ShipCore=entity():isWeldedTo()
+    ShipCore:setMass(100) #ShipCore
+        for(Loop=1,ShipCore:hasConstraints("Weld")){
+            Ent = ShipCore:isWeldedTo(Loop)
+            if(Ent:model()=="models/hunter/plates/plate.mdl"){
+                Ent:setMass(1)
+            }
+        } Loop=0
+}
+
+if(~Generate&Generate){
+    On=(On ? 0 : 1)
+}
+
+if(~Life&Life){
+    On2=(On2 ? 0 : 1)
+}
+
+if(On){
+    Air = (Pressure > 0 ? 1 : 0)
+}else{
+    Air = 0
+}

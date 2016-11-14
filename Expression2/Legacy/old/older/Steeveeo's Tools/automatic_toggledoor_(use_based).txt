@@ -1,0 +1,72 @@
+# Author: Steeveeo
+# Updated: July 9, 2010 @ 6:55 AM PST (-8 GMT)
+
+# Use and Purpose:
+# Give this a model with the concmd "wire_expression2_model <path>",
+# then place where needed to make an effective and lagless door that
+# runs on [USE]. Use inputs for further control.
+
+# Fair Use and Legality:
+# This chip is provided as is and is designed to work only
+# as instructed. This is provided under Creative Commons and
+# may be modified and/or shared with anyone as long as proper
+# credit is given to the original author (Steeveeo). Failure to
+# give credit by plagiarising or removing this header is subject
+# to administrative punishment.
+
+@name Use Door
+@inputs Lock OpenSeconds OwnerOnly
+@outputs PlayersInRange 
+@persist PlayOpenSound SoundOpenPlayed PlayClosedSound SoundClosedPlayed
+@trigger all
+
+#CREDITS:
+#
+#Writer: Steeveeo
+
+runOnUse(1)
+hide(1)
+
+#Variable Declaration
+if(OpenSeconds == 0)
+{
+    OpenSeconds = 3
+}
+
+#Open/Close door
+if(!Lock)
+{
+    if(OwnerOnly & useClk(owner()))
+    {
+        soundStop("DoorClosed")
+        entity():setAlpha(0)
+        entity():setSolid(0)
+        soundPlay("DoorOpen", 0, "doors/doormove3.wav")
+        timer("ChecktoClose",OpenSeconds*1000)
+    }
+    elseif(!OwnerOnly & useClk())
+    {
+        soundStop("DoorClosed")
+        entity():setAlpha(0)
+        entity():setSolid(0)
+        soundPlay("DoorOpen", 0, "doors/doormove3.wav")
+        timer("ChecktoClose",OpenSeconds*1000)
+    }
+}
+if(clk("ChecktoClose"))
+{
+    #Entity Discovery
+    findByClass("player")
+    PlayersInRange = findClipToSphere(entity():pos(), 75)
+    if(!PlayersInRange)
+    {
+        soundStop("DoorOpen")
+        entity():setAlpha(255)
+        entity():setSolid(1)
+        soundPlay("DoorClosed", 0, "doors/door_metal_thin_open1.wav")
+    }
+    else
+    {
+        timer("ChecktoClose",1000)
+    }
+}

@@ -1,0 +1,66 @@
+@name Core Base Absolute
+@inputs [Eye Cam Pod]:wirelink [PodActive]:number #Core
+@inputs [Ctrl MCtrl Aux MVec]:vector #Controls
+@persist [CoreB CoreM]:entity #Core
+@outputs [AT]:angle [VT VCoreM]:vector #Debug
+
+#Core
+    if(dupefinished()){ #Duped
+        reset()
+    }
+    if(first()){
+        runOnTick(1)
+        CoreB = entity():isWeldedTo()
+        VCoreM = CoreB:pos()+CoreB:up()*55
+        CoreM = holoCreate(1,VCoreM,vec(),CoreB:angles())
+        Eye["Enable",number] = 1
+        Pod["Crosshairs",number] = 1
+    }
+
+#Camera
+    if(first()){
+        Cam["Parent",entity] = CoreM
+        Cam["Position",vector] = VCoreM
+        Cam["Angle",angle] = CoreM:angles()
+    }
+    if(~PodActive){
+        Cam["Activated",number] = PodActive
+    }
+
+#Orientation - Absolute
+    #Assignment
+    if(tickClk()){
+        if(PodActive){
+            AT = AT+ang(MVec)/2
+            ATRoll = -(CoreM:velL():y())
+            AT = AT:setRoll(ATRoll/200)
+            ATClamp = ang(90,180,35)
+            AT = clamp(angnorm(AT),-ATClamp,ATClamp)
+        }else{
+            AT = ang()
+        }
+    }
+    #Engine
+    if(tickClk()){
+        holoAng(1,AT)
+    }
+
+#Movement - Absolute
+    #Assignment
+    if(tickClk()){
+        VT = CoreM:pos()-CoreM:vel()*0.15
+        if(PodActive){
+            if(Ctrl){
+                VTMod = (Aux:z() ? 2.5 : 1) * 10
+                VT += Ctrl:x()*CoreM:right()*VTMod
+                VT += Ctrl:y()*CoreM:forward()*VTMod
+                VT += Ctrl:z()*CoreM:up()*VTMod
+            }
+        }else{
+            VT = VCoreM
+        }
+    }
+    #Engine
+    if(tickClk()){
+         holoPos(1,VT)
+    }

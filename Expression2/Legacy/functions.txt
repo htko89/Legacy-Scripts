@@ -1,0 +1,28 @@
+@name functions
+@outputs [System]:array [SyncNum]:number
+@persist [Sync]:gtable
+
+function void initsync(Key:string){
+    Sync=gTable(Key,0)
+    #Create System if nonexistent
+    if(!Sync[Key,string]){ 
+        Sync[1,array]=array()
+        #Add other arrays here
+        Sync[Key,string]=Sync[1,array]:id()
+        hint("Sync Created",4)
+    }
+    #Use first array to check connection
+    System=Sync[1,array]
+    if(Sync[Key,string]==System:id()){
+        hint("Sync Success",4)
+    }else{
+        hint("Sync Failed",4)
+    }
+    hint(Sync[Key,string],4)
+    hint(System:id(),4)
+}
+function void entity:sync(ID:number){
+    System:pushEntity(This)
+    SyncNum=System:count()
+}
+    

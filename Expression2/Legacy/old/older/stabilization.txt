@@ -1,0 +1,34 @@
+@name Stabilization
+@inputs Vector:vector
+@outputs TargetVector:vector Thrust:number Boom:number
+@persist TarVector:vector [Owner E]:entity
+@model
+
+interval(10)
+
+if(dupefinished()){
+    reset()
+}
+
+if(first()){
+    Owner=owner()
+    E=entity():isWeldedTo()
+    E:setMass(300)
+}
+
+
+#E is the stabilized entity
+#A is the target angle
+    CurP=E:pos()
+    A=(Owner:aimPos()-CurP):toAngle()
+    #A=Vector:toAngle()
+    TarQ = quat(A) #Calculate quaternion for target orientation
+    CurQ = quat(E) #Calculate current orientation quaternion
+#TarQ/CurQ is a quaternion representing the rotation that will rotate the object from current orientation to the target one.
+    Q = TarQ/CurQ
+#applyTorque() works on intrinsic vectors! Get the rotation vector and transform it.
+    V = E:toLocal(rotationVector(Q)+E:pos())
+#Alternatively, can use "V = transpose(matrix(E))*rotationVector(Q)"
+#Apply torque. angVelVector() works like a delta term.
+#Factors 150 and 12 can be adjusted to achieve best effect.
+    E:applyTorque((250*V - 35*E:angVelVector())*E:inertia())  

@@ -1,0 +1,54 @@
+@name Artificial Gravity
+@inputs [GPS]:vector
+@outputs [PropsEaten Mass]:number
+@persist [Props]:array [TarP]:vector [Min Max Mult StopMult]:number
+@trigger 
+@model models/hunter/misc/sphere375x375.mdl
+runOnTick(1)
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+if(first()){
+    entity():setColor(vec4(255,255,255,255))
+    entity():setMaterial("phoenix_storms/black_chrome")
+    Min=clamp(entity():radius()/3-20,0,9999)
+    Max=400
+    Mass=10000
+    entity():setMass(Mass)
+}
+timer("Find",1000)
+if(clk("Find")|first()){
+    findIncludePlayerProps(owner()) 
+    findExcludeEntities(players())
+    TarP=(->GPS ? GPS : entity():pos())
+    Found=findInSphere(TarP,100000)
+    #Found=findByClass("prop_physics")
+    findSortByDistance(entity():pos())
+    Props=findToArray()    
+}
+for(Loop=1, Props:count()){
+    Prop=Props[Loop,entity]
+    Dist=Prop:pos():distance(TarP)-Min
+    Mult=Mass/10000
+    Prop:applyForce(clamp(TarP-Prop:pos(),-15,15)*Prop:mass()*Mult)
+    StopMult=clamp(Mass/10000,1,9999)
+    Prop:applyForce(-Prop:vel()*StopMult*Prop:mass()/Dist)
+    Prop:applyForce(-Prop:vel()*Prop:mass()/800)
+    if(Dist<Max){
+        Alpha=clamp((Dist/Max)*255,0,255)
+        Prop:setAlpha(Alpha)
+        if(Dist<Min){
+            Mass+=Prop:mass()
+            entity():setMass(Mass)
+            Prop:propDelete()
+            PropsEaten++
+            entity():soundPlay(1,0.616,"buttons/combine_button7.wav") 
+        }
+    }else{
+        Prop:setAlpha(255)
+    }
+    if(minquota()<300){
+        exit()
+    }
+}

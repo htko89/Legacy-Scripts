@@ -1,0 +1,10 @@
+@name APC
+@inputs F
+@outputs Light
+@persist 
+@trigger F
+
+if(~F&F){
+    Light=(Light ? 0 : 1)
+}
+

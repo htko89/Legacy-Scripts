@@ -1,0 +1,60 @@
+@name Bomber
+@inputs [Spawner]:wirelink
+@outputs [Count]:number [PlayerCount]:number
+@persist [Players Props Ready]:array [Find Bomb Drop]:number [LastSpawned Prop]:entity
+runOnTick(1)
+
+if(tickClk()){
+    Find=($PlayerCount ? 1 : Find)
+    if(Find){
+        findClearBlackList() 
+        findExcludeEntities(playersAdmins())
+        findExcludeEntities(playersSuperAdmins())
+        Find=(findByClass("player") ? 0 : 1)
+        if(!Find){
+            Players=players()
+            PlayerCount=Players:count()
+            Ready=array()
+        }
+    }
+    timer("Spawn",5000)
+    LastSpawned=Spawner["LastSpawned",entity]
+    Spawner["UndoEnt",entity]=(LastSpawned:isFrozen() ? LastSpawned : noentity())
+    Spawner["Spawn",number]=0
+    Spawner["Undo",number]=0
+    Props=Spawner["Props",array]
+    Count=Props:count()
+}
+if(clk("Spawn")){
+    Spawner["Spawn",number]=(Count<PlayerCount ? 1 : 0)
+    Spawner["Undo",number]=(Count>PlayerCount ? 1 : 0)
+    Props=Spawner["Props",array]
+    Count=Props:count()
+}
+Bomb=(Count==PlayerCount ? 1 : 0)
+if(Bomb){
+    for(Loop=1,Count){
+        Prop=Props[Loop,entity]
+        CurP=Prop:pos()
+        TarQ = quat(vec(0,0,-1))
+        CurQ = quat(Prop)
+        Q = TarQ/CurQ
+        V = Prop:toLocal(rotationVector(Q)+CurP)
+        Prop:applyTorque((350*V - 45*Prop:angVelVector())*Prop:inertia())
+        if(!Drop){
+            Offset=1
+            TarP=Players[Loop,entity]:pos()+vec(0,0,Offset*2000)
+            TarVector=TarP-CurP
+            if(TarVector:length()<50){
+                Ready[Loop,number]=1
+            }
+        }
+        Drop=(Ready:sum()==Count ? 1 : 0 )
+        if(Drop){
+            Offset=-1
+            TarP=Players[Loop,entity]:pos()+vec(0,0,Offset*2000)
+            TarVector=TarP-CurP
+        }
+        Prop:applyForce((15*TarVector-Prop:vel()/66)*Prop:mass())
+    }
+}

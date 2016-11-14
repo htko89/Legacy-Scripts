@@ -1,0 +1,519 @@
+@name sc camera manager v3 2 by XrayIndia
+@inputs Cam:wirelink Pod:wirelink Controls:wirelink
+@inputs Scin:entity    #optional
+@persist Sc:entity On View External
+@persist Hindexhud Hindexcockpit Hindexcom
+@trigger none
+
+#[
+
+SpaceCraft Camera Manager V3.2 by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+interval(10)
+
+#Display
+Hud=1
+Cockpit=1
+Commands=0
+Hide=1    #Used to hide the cockpit to all players except the pilot
+
+
+
+#initialisation
+if(first()  | dupefinished())
+{
+    
+    Hindexhud=random(0,10000)
+    Hindexcockpit=random(0,10000)
+    Hindexcom=random(0,10000)
+
+    if(!Scin)
+    {
+        Sc=entity():isWeldedTo()
+    }
+    else
+    {
+        Sc=Scin
+    }
+    
+    if(max(abs(Sc:angles():pitch()),abs(Sc:angles():roll()))>1)
+    {
+        soundPlay(1,2,"buttons/button8.wav")
+        entity():setColor(255,0,0)
+        hint("[SCCM] Error: SC needs to be horizontal for initialisation. Refresh expression.",3)
+
+        exit()
+    }
+    else
+    {
+        soundPlay(1,2,"buttons/button6.wav")
+        entity():setColor(255,255,255)
+        hint("[SCCM] SpaceCraft Camera Manager v3.2 by XrayIndia. Initialisation successful",3)
+    }
+    
+    External=0
+}
+
+
+
+#Maximum speed for HUD
+Vxmax=2000  #Same as SCC
+
+#Inputs
+Ix=Controls["Xout",number]
+Iy=Controls["Yout",number]
+Iz=Controls["zout",number]
+
+Ip=Controls["Pout",number]
+Iq=Controls["Qout",number]
+Ir=Controls["Rout",number]
+
+On=Pod["Active",number]
+
+View=Pod["Mouse1",number]
+
+Driver=Pod["Entity",entity]:driver()
+
+Forward=Sc:forward()
+Right=Sc:right()
+Up=Sc:up()
+Vel=Sc:vel()
+
+
+#External View
+if(View & $View)
+{
+    External+=1
+    if(External>1){External=0}
+}
+
+#Camera position
+if(Sc:model()=="models/ships/ngm_fighter.mdl")
+{
+    if(External)
+    {
+        Campos=Sc:boxCenterW()-800*Forward+100*Up
+        
+    }
+    elseif(!External)
+    {
+        Campos=Sc:boxCenterW()+20*Forward+10.5*Up
+    }
+}
+else
+{
+    if(External)
+    {
+        Campos=Sc:massCenter()+1.5*Sc:boxSize():z()*Up-2*Sc:boxSize():x()*Forward
+        
+    }
+    elseif(!External)
+    {
+        Campos=Sc:massCenter()+1.1*Sc:boxSize():z()*Up
+    }
+    
+}
+
+
+
+#Camera on
+Cam["Activated",number]=Pod["Active",number]
+
+#Parenting camera
+if( (first() | dupefinished() | $External) & !External)
+{
+    Cam["Position",vector]=Campos
+    Cam["Parent",entity]=Sc
+}
+if(External)
+{
+    Cam["Position",vector]=Campos
+    Cam["Parent",entity]=noentity()
+}
+
+
+#Mouse view
+if(Pod["Mouse2",number])
+{
+    
+    Cam["Angle",angle]=Driver:eyeAngles():setRoll(0)+Sc:angles()
+}
+else
+{
+    
+    Cam["Angle",angle]=Sc:angles()
+}
+
+
+
+#### Holograms
+
+##HUD
+if(Hud)
+{
+    Holoshud=4
+
+    if(first() | dupefinished())
+    {
+        for(K=1,Holoshud,1)
+        {
+        holoCreate(Hindexhud+K)
+        holoDisableShading(Hindexhud+K,1)
+        }
+    
+        
+    }
+    
+    #Crosshair
+    holoColor(Hindexhud+1,vec(255,255,255), 150)
+    holoModel(Hindexhud+1, "hqsphere")
+    holoPos(Hindexhud+1,Campos+30*Forward)
+    holoScaleUnits(Hindexhud+1, vec(0.4,0.4,0.4) )
+    
+    #Vel indicator
+    if(Vel:length()>5)
+    {
+        holoColor(Hindexhud+2,vec(255,0,0), 150)
+    }
+    else
+    {
+        holoColor(Hindexhud+2,vec(255,0,0), 0)
+    }
+    holoModel(Hindexhud+2, "hqsphere")
+    holoPos(Hindexhud+2,Campos+30*Vel/Vel:length()) 
+    holoScaleUnits(Hindexhud+2, vec(0.8,0.8,0.8) )
+
+    
+    #Thrust indicator
+    holoAng(Hindexhud+3,Sc:angles())
+    holoColor(Hindexhud+3,vec(255,255,255), 150)
+    holoPos(Hindexhud+3,Campos+40*Forward-12*Right-1*Up+0.5*15*Ix*Up)
+    holoScaleUnits(Hindexhud+3, vec(1,1,15*Ix) )
+    
+
+    #Velx indicator
+    holoAng(Hindexhud+4,Sc:angles())
+    holoColor(Hindexhud+4,vec(255,0,0), 150)
+    holoPos(Hindexhud+4,Campos+39*Forward-11.5*Right-1*Up+0.5*15*clamp(Sc:velL():x()/Vxmax,-1.2,1.2)*Up )
+    holoScaleUnits(Hindexhud+4, vec(1,1,15*clamp(Sc:velL():x()/Vxmax, -1.2,1.2) ) )
+
+    #Parenting
+    if(first() | dupefinished())
+    {
+        for(K=1,Holoshud,1)
+        {
+            holoParent(Hindexhud+K,Sc)
+        }
+    }
+}
+
+
+####Cockpit
+if(Cockpit)
+{
+    Holoscockpit=10
+    
+    if(first() | dupefinished())
+    {
+        for(I=1,Holoscockpit,1)
+        {
+            holoCreate(Hindexcockpit+I)
+        }
+    
+        #Console
+        holoMaterial(Hindexcockpit+1,"models/props_building_details/courtyard_template001c_bars")
+        holoModel(Hindexcockpit+1,"prism")
+        holoScaleUnits(Hindexcockpit+1,vec(30,45,20))
+        holoPos(Hindexcockpit+1,Campos+55*Forward-18*Up)
+        holoAng(Hindexcockpit+1,Sc:angles()+ang(0,0,0) )
+    
+        #bar right
+        holoMaterial(Hindexcockpit+2,"models/props_building_details/courtyard_template001c_bars")
+        holoPos(Hindexcockpit+2, Campos+27*Forward+1*Up+21*Right)
+        holoAng(Hindexcockpit+2, Sc:angles()+ang(20,0,0))
+        holoScaleUnits(Hindexcockpit+2,vec(60,2,2))
+    
+        #Bar left
+        holoMaterial(Hindexcockpit+3,"models/props_building_details/courtyard_template001c_bars")
+        holoPos(Hindexcockpit+3, Campos+27*Forward+1*Up-21*Right)
+        holoAng(Hindexcockpit+3, Sc:angles()+ang(20,0,0))
+        holoScaleUnits(Hindexcockpit+3,vec(60,2,2))
+    
+        #Screen
+        holoModel(Hindexcockpit+4,"prism")
+        holoMaterial(Hindexcockpit+4,"models/props_lab/generatorconsole_disp")
+        holoAng(Hindexcockpit+4,Sc:angles())
+        holoScaleUnits(Hindexcockpit+4,vec(25,30,15))
+        holoPos(Hindexcockpit+4,Campos+53*Forward-18*Up)
+    
+        
+    
+        #around
+        holoModel(Hindexcockpit+5,"hq_stube_thin")
+        holoMaterial(Hindexcockpit+5,"models/props_building_details/courtyard_template001c_bars")
+        holoPos(Hindexcockpit+5,Campos+10*Forward-42*Up)
+        holoAng(Hindexcockpit+5,Sc:angles())
+        holoScaleUnits(Hindexcockpit+5, vec(140,50,50) )
+    
+        #bottom
+        holoMaterial(Hindexcockpit+6,"models/props_building_details/courtyard_template001c_bars")
+        holoPos(Hindexcockpit+6,Campos+10*Forward-65*Up)
+        holoAng(Hindexcockpit+6,Sc:angles())
+        holoScaleUnits(Hindexcockpit+6, vec(140,50,1))
+
+        #rear
+        holoMaterial(Hindexcockpit+7,"models/props_building_details/courtyard_template001c_bars")
+        holoPos(Hindexcockpit+7,Campos-53*Forward-4*Up)
+        holoAng(Hindexcockpit+7,Sc:angles())
+        holoScaleUnits(Hindexcockpit+7, vec(1,45,30))
+    
+        #up
+        holoModel(Hindexcockpit+8,"hq_stube_thin")
+        holoMaterial(Hindexcockpit+8,"models/props_building_details/courtyard_template001c_bars")
+        holoPos(Hindexcockpit+8,Campos-27*Forward+11*Up)
+        holoAng(Hindexcockpit+8,Sc:angles())
+        holoScaleUnits(Hindexcockpit+8, vec(54,45,2) )
+    
+        #Seat horizontal
+        holoMaterial(Hindexcockpit+9,"phoenix_storms/MetalSet_1-2")
+        holoPos(Hindexcockpit+9,Campos-0*Forward-40*Up)
+        holoAng(Hindexcockpit+9,Sc:angles())
+        holoScaleUnits(Hindexcockpit+9, vec(40,20,1))
+    
+        #seat vertical
+        holoMaterial(Hindexcockpit+10,"phoenix_storms/MetalSet_1-2")
+        holoPos(Hindexcockpit+10,Campos-20*Forward-20*Up)
+        holoAng(Hindexcockpit+10,Sc:angles())
+        holoScaleUnits(Hindexcockpit+10, vec(1,20,40))
+    
+        for(I=1,Holoscockpit,1)
+        {
+            holoParent(Hindexcockpit+I,Sc)
+        }
+    }
+}
+
+
+###Commands
+
+if(Commands)
+{
+    Holoscom=12
+    
+    
+    Joybase=Campos+15*Right+10*Forward-30*Up
+    Throttlebase=Campos-15*Right+10*Forward-30*Up
+    Rudderbase=Campos+60*Forward-64*Up
+
+
+    if(first() | dupefinished())
+    {
+        for(I=1,Holoscom,1)
+        {
+            holoCreate(Hindexcom+I)
+        }
+        for(I=1,4,1)
+        {
+            holoModel(Hindexcom+I,"cylinder")
+        }
+
+        #Joystick base [11]
+        holoColor(Hindexcom+11,vec(100,100,100) )
+        holoAng(Hindexcom+11,Sc:angles() )
+        holoPos(Hindexcom+11,Joybase-20*Up-10*Forward)
+        holoScaleUnits(Hindexcom+11,vec(40,10,40))
+        holoParent(Hindexcom+11,Sc)
+    
+        #Throttle Rail 6
+        holoColor(Hindexcom+6,vec(0,0,0) )
+        holoAng(Hindexcom+6,Sc:angles())
+        holoScaleUnits(Hindexcom+6,vec(16,2,1) )
+        holoPos(Hindexcom+6,Throttlebase)
+        holoParent(Hindexcom+6,Sc)
+
+        #Throttle base [12]
+        holoColor(Hindexcom+12,vec(100,100,100) )
+        holoAng(Hindexcom+12,Sc:angles())
+        holoPos(Hindexcom+12,Throttlebase-20*Up-10*Forward)
+        holoScaleUnits(Hindexcom+12,vec(40,10,40))
+        holoParent(Hindexcom+12,Sc)
+    
+        #Rail right 9
+        holoColor(Hindexcom+9,vec(0,0,0) )
+        holoAng(Hindexcom+9,Sc:angles())
+        holoScaleUnits(Hindexcom+9,vec(25,3,1) )
+        holoPos(Hindexcom+9,Rudderbase+8*Right)
+        holoParent(Hindexcom+9,Sc)
+
+        #Rail left 10
+        holoColor(Hindexcom+10,vec(0,0,0) )
+        holoAng(Hindexcom+10,Sc:angles())
+        holoScaleUnits(Hindexcom+10,vec(25,3,1) )
+        holoPos(Hindexcom+10,Rudderbase-8*Right)
+        holoParent(Hindexcom+10,Sc)
+    }
+
+    ##Joystick [1 - 3]
+    #Joystick circle 1
+    holoColor(Hindexcom+1,vec(0,0,0) )
+    holoAng(Hindexcom+1,Sc:angles())
+    holoPos(Hindexcom+1,Joybase)
+    holoScaleUnits(Hindexcom+1,vec(6,6,1) )
+    if(first() | dupefinished())
+    {
+        holoParent(Hindexcom+1,Sc)
+    }
+
+    #Stick 2
+    holoColor(Hindexcom+2,vec(150,150,150) )
+    holoAng(Hindexcom+2,Sc:angles()+ang(30*Ip,0,-30*Ir) )
+    holoPos(Hindexcom+2,Joybase)
+    holoScaleUnits(Hindexcom+2,vec(2,2,15))
+    if(first() | dupefinished())
+    {
+        holoParent(Hindexcom+2,Sc)
+    }
+
+    #Cap 3
+    if(first() | dupefinished())
+    {
+        holoColor(Hindexcom+3,vec(50,50,50) )
+        holoAng(Hindexcom+3,Sc:angles())
+        holoPos(Hindexcom+3,Joybase+8*Up)
+        holoScaleUnits(Hindexcom+3,vec(3,3,2))
+        holoParent(Hindexcom+3,Hindexcom+2)
+    }
+
+    ##Throttle [4 - 6]
+    #Handle 4
+    holoColor(Hindexcom+4,vec(50,50,50) )
+    holoAng(Hindexcom+4,Sc:angles()+ang(0,0,90) )
+    holoPos(Hindexcom+4,Throttlebase+5*Up+7*Ix*Forward )
+    holoScaleUnits(Hindexcom+4,vec(3,3,6))
+    if(first() | dupefinished())
+    {
+        holoParent(Hindexcom+4,Sc)
+    }
+
+    #Stick 5
+    holoColor(Hindexcom+5,vec(150,150,150) )
+    holoAng(Hindexcom+5,Sc:angles())
+    holoPos(Hindexcom+5,Throttlebase+7*Ix*Forward )
+    holoScaleUnits(Hindexcom+5,vec(1.5,1.5,10))
+    if(first() | dupefinished())
+    {
+        holoParent(Hindexcom+5,Sc)
+    }
+
+    ##Rudder [7 - 10]
+    #Pedal right 7
+    holoMaterial(Hindexcom+7,"phoenix_storms/MetalSet_1-2")
+    holoAng(Hindexcom+7,Sc:angles())
+    holoScaleUnits(Hindexcom+7,vec(2,8,12) )
+    holoPos(Hindexcom+7,Rudderbase+8*Right+6*Up+8*Iq*Forward)
+    if(first() | dupefinished())
+    {
+        holoParent(Hindexcom+7,Sc)
+    }
+
+    #Pedal left 8
+    holoMaterial(Hindexcom+8,"phoenix_storms/MetalSet_1-2")
+    holoAng(Hindexcom+8,Sc:angles())
+    holoScaleUnits(Hindexcom+8,vec(2,8,12) )
+    holoPos(Hindexcom+8,Rudderbase-8*Right+6*Up-8*Iq*Forward)
+    if(first() | dupefinished())
+    {
+        holoParent(Hindexcom+8,Sc)
+    }
+}
+
+
+if(Hide)
+{
+    if(Hud)
+    {
+        for(K=1,Holoshud,1)
+        {
+            holoVisible(Hindexhud+K,players(),0)
+        }
+        if(!External)
+        {
+            for(K=1,Holoshud,1)
+            {
+                holoVisible(Hindexhud+K,Driver,1)
+            }
+        }
+    }
+
+    if(Cockpit)
+    {
+        for(K=1,Holoscockpit,1)
+        {
+            holoVisible(Hindexcockpit+K,players(),0)
+        }
+    
+        if(!External)
+        {
+            for(K=1,Holoscockpit,1)
+            {
+                holoVisible(Hindexcockpit+K,Driver,1)
+            }
+        }
+    }
+
+    if(Commands)
+    {
+        for(K=1,Holoscom,1)
+        {
+            holoVisible(Hindexcom+K,players(),0)
+        }
+        if(!External)
+        {
+            for(K=1,Holoscom,1)
+            {
+                holoVisible(Hindexcom+K,Driver,1)
+            }
+        }
+    }
+}
+
+if( (first() | dupefinished()) &!Hide)
+{
+    for(K=1,Holoshud,1)
+    {
+        holoVisible(Hindexhud+K,players(),1)
+    }
+    for(K=1,Holoscockpit,1)
+    {
+        holoVisible(Hindexcockpit+K,players(),1)
+    }
+    for(K=1,Holoscom,1)
+    {
+        holoVisible(Hindexcom+K,players(),1)
+    }
+}
+
+#[
+changelog
+
+    v3.2
+        deleted unparenting
+
+    v3.1
+
+        Only one cockpit display, visible by owner only when inside the ship
+        Changed input format
+
+
+]#
+
+#SpaceCraft Camera Manager v3.2 by XrayIndia.

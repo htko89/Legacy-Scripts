@@ -1,0 +1,14 @@
+@name 
+@inputs 
+@outputs 
+@persist 
+@trigger 
+
+runOnLast(1)
+timer("dicks",1000)
+if(clk("dicks")){
+    reset()
+}
+if(last()){
+    print("negrolite")
+}

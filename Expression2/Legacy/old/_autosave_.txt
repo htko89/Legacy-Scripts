@@ -1,0 +1,12 @@
+@name Control
+@inputs [EGP]:array
+@outputs [System]:array
+@persist [Sync]:gtable
+@trigger 
+
+if(first()){
+    
+    sync()
+}
+runOnTick(1)
+

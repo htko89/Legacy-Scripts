@@ -1,0 +1,509 @@
+@name sc control v13 7 by XrayIndia
+@inputs Controls:wirelink
+@inputs Scin:entity    #optional
+@persist Sc:entity Mass Drift Freex Hover 
+@persist Fighter Heimdal Holos Hindex
+@persist Tf:vector Tb:vector Tr:vector Tl:vector Th:vector
+@trigger none
+
+#[
+
+SpaceCraft Control V13.7 by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+
+interval(10)
+
+##Parameters
+
+#Realism (Min 0.1), defines the thrusters' maximum output
+Realism=0.5
+
+
+#Maximum Thrust, proportional to the ship's mass
+Fmax=4*Mass*(1/Realism)    #Stabilisation maximum thrust
+
+Fxmax=2*Fmax    #Main thrusters maximum thrust (2 thrusters so total force = 2*Fxmax = 4*Fmax)
+Fxmaxneg=1.5*Fmax   #Reverse maximum thrust (2 thrusters so total force = 2*Fxmaxneg = 3*Fmax)
+Fhovermax=2*Fmax   #Hover maximum thrust
+
+#Maximum velocity
+Vxmax=2000  #Max forward (X) velocity, Garry's mod's max under normal conditions: 2000
+Vyzmax=200  #Max Y Z translation velocity
+Vrmax=120   #Max angular (Pitch, Yaw) velocity
+Vrrmax=100  #Max angular (Roll) velocity
+Vhovermax=200 #Default: 200
+
+#Reaction Coefficients, proportional to Mass, Defines the thrust's curve
+Pt=0.2*Mass   #Translation. Default: 0.2*Mass
+Pr=0.7*Pt     #Rotation. Default 0.7*Pt
+
+#3D Holograms' properties
+Holograms=1   #Holograms on or off
+Hlmax=0.5*Sc:radius() #Hologram's length, proportional to the ship's size
+Hw=0.05   #Hologram's width coefficient
+
+#Sound
+Soundpitch=100  #Sound's maximum pitch in %
+
+#initialisation
+if(first() | dupefinished())    #When the expression is created or has been duplicated
+{   
+    if(!Scin) #Defining the object considred as the spacecraft to control
+    {
+        Sc=entity():isWeldedTo()    #Usually, the object the expression is attached to
+    }
+    else    #if a different model than the one the expression is welded on is used
+    {
+        Sc=Scin
+    }
+
+    Mass=clamp(0.0008*Sc:volume(),0,50000)
+    Sc:setMass(Mass) #Defining the ship's mass regarding of its size.
+    
+    #Starting thrusters sounds
+    Sc:soundPlay(1,0,"thrusters/jet03.wav")
+    Sc:soundPlay(2,0,"thrusters/rocket01.wav")
+    Sc:soundPlay(4,0,"thrusters/rocket04.wav")
+    
+    Hindex=random(0,10000)  #3D Holograms' index range, randomized and stored so multiple SCCs don't have hologams' conflict
+    
+    #Initialisation notification
+    if(Sc)
+    {
+        soundPlay(5,2,"buttons/button6.wav")
+        entity():setColor(255,255,255)
+        hint("[SCC] SpaceCraft Control v13.7 by XrayIndia. Initialisation successful",3)
+    }
+    else
+    {
+        soundPlay(7,2,"buttons/button8.wav")
+        entity():setColor(255,0,0)
+        hint("[SCC] Error: Invalid entity. Link a prop to Scin and refresh expression.",3)
+    }
+}
+
+
+## Spacecraft's datas
+
+#inputs
+Ix=Controls["Xout",number]  #Command input's forward (Throttle)
+Iy=Controls["Yout",number]  #Command input's sideway translation
+Iz=Controls["Zout",number]  #Command input's vertical translation
+
+Ip=Controls["Pout",number]  #Command input's pitch
+Iq=Controls["Qout",number]  #Command input's yaw
+Ir=Controls["Rout",number]  #Command input's roll
+
+Drift=Controls["Driftout",number] #Disables translation stabilisation "Cut engine"
+Freex=Controls["Freexout",number] #Switches to Manual Thrust Control
+Hover=Controls["Hoverout",number] #Activates hover thrusters
+
+#Recurrent values
+Masscenter=Sc:massCenter()  #Gets the ship's massCenter
+
+Forward=Sc:forward()    #Gets the ship's forward (X) direction
+Right=Sc:right()    #Gets the ship's right (-Y) direction
+Up=Sc:up()  #Gets the ship's up (Z) direction
+
+Boxsizex=Sc:boxSize():x() #Gets the ship's length
+Boxsizey=Sc:boxSize():y() #Gets the ship's 
+
+#Angular velocity
+Vp=Sc:angVel():pitch()
+Vq=Sc:angVel():yaw()
+Vr=Sc:angVel():roll()
+
+#Local translation velocity
+Vx=Sc:velL():x()    #Forward (X)
+Vy=Sc:velL():y()    #Sideways (Y)
+Vz=Sc:velL():z()    #Vertical (Z)
+
+
+#Defining thrusters' positions.
+Tf=Masscenter+0.4*Boxsizex*Forward  #Front stabilisation thruster (Pitch Yaw Y Z)
+Tb=Masscenter-0.4*Boxsizex*Forward  #Back stabilisation thruster (Pitch Yaw Y Z)
+
+Tr=Masscenter+0.4*Boxsizey*Right    #Right roll thruster
+Tl=Masscenter-0.4*Boxsizey*Right    #Left roll thruster
+
+Tfr=Masscenter+0.4*Boxsizex*Forward+0.1*Boxsizey*Right  #Front right forward thruster
+Tfl=Masscenter+0.4*Boxsizex*Forward-0.1*Boxsizey*Right  #Front left forward thruster
+
+Tbr=Masscenter-0.4*Boxsizex*Forward+0.1*Boxsizey*Right  #Back right forward thruster
+Tbl=Masscenter-0.4*Boxsizex*Forward-0.1*Boxsizey*Right  #Front right forward thruster
+
+Thf=Masscenter+0.2*Boxsizex*Forward
+Thb=Masscenter-0.2*Boxsizex*Forward
+
+##Thrust calculation, Translation stabilisation off and Manual thrust control
+
+#Translation
+if(!Drift)
+{
+    if(!Freex)  #Automatic thrust control
+    {
+        Fx=clamp(Pt*(Vxmax*Ix-Vx),-Fxmaxneg,Fxmax)
+    }
+    else    #Manual thrust control
+    {
+        Fx=Ix*Fxmax
+    }
+    
+    Fy=clamp(Pt*(Vyzmax*Iy+Vy),-Fmax,Fmax)  #Vy is taken according to y() as force is applied according to -Y()
+    
+    if(Hover) #When hover thrusters are activated, upwards stabilisation thrusters are disabled
+    {
+        Fz=clamp(Pt*(Vhovermax*Iz-Vz),-Fmax,0)
+        Fhover=clamp(Pt*(Vhovermax*Iz-Vz),0,Fhovermax)
+    }
+    else    #Standard stabilisation thrusters, when hover thrusters are off
+    {
+        Fz=clamp(Pt*(Vyzmax*Iz-Vz),-Fmax,Fmax)
+        Fhover=0
+    }
+
+}
+else    #When drifting (Translation stabilisation off, "Cut-engine")
+{
+    Fx=0
+    Fy=0
+    Fz=0
+}
+
+
+
+#Rotation
+Fp=clamp(Pr*(Vrmax*Ip-Vp),-Fmax,Fmax)
+Fq=clamp(Pr*(Vrmax*Iq-Vq),-Fmax,Fmax)
+Fr=clamp(Pr*(Vrrmax*Ir-Vr),-Fmax,Fmax)
+
+
+
+
+
+###Stabilisation thrusters: Priority to rotation
+#This is used when the thrusters hit their maximum thrust, Fmax.
+#In order to keep control over the ship, priority is given to rotation over translation.
+#This works in a similar way to a car's ABS
+
+##Z axis
+#If Tbz exceeds Fmax
+if( (Fz+Fp)>Fmax ){Ftfztemp=Fmax-2*Fp}
+elseif( (Fz+Fp)<-Fmax ){Ftfztemp=-Fmax-2*Fp}
+else{Ftfztemp=Fz-Fp}
+
+#If Tfz exceeds Fmax
+if( (Fz-Fp)>Fmax ){Ftbztemp=Fmax+2*Fp}
+elseif( (Fz-Fp)<-Fmax ){Ftbztemp=-Fmax+2*Fp}
+else{Ftbztemp=Fz+Fp}
+
+
+##y axis
+#If Tby exceeds Fmax
+if( (Fy+Fq)>Fmax ){Ftfytemp=Fmax-2*Fq}
+elseif( (Fy+Fq)<-Fmax ){Ftfytemp=-Fmax-2*Fq}
+else{Ftfytemp=Fy-Fq}
+
+#If Tfy exceeds Fmax
+if( (Fy-Fq)>Fmax ){Ftbytemp=Fmax+2*Fq}
+elseif( (Fy-Fq)<-Fmax ){Ftbytemp=-Fmax+2*Fq}
+else{Ftbytemp=Fy+Fq}
+
+
+
+#Final thrust limitation to be sure the output stays below Fmax
+Ftfz=clamp(Ftfztemp,-Fmax,Fmax)
+Ftbz=clamp(Ftbztemp,-Fmax,Fmax)
+
+Ftfy=clamp(Ftfytemp,-Fmax,Fmax)
+Ftby=clamp(Ftbytemp,-Fmax,Fmax)
+
+
+
+
+###Force application
+#Note: thrusters can apply a negative force.
+
+
+#Anticipating T's next position: -0.015*Sc:vel()
+#This is because the expression only calculates the thruster's position every 10 ms
+#This problem only occurs with Expression2 and wouldn't exist in reality as the thrusters' position wouldn't be calculated.
+Ant=-0.015*Sc:vel()  
+
+#Forward
+if(Fx>0)    #Forward thrust, applied at the back right and back left thrusters
+{
+    Sc:applyOffsetForce(Fx*Forward,Tbr+Ant)
+    Sc:applyOffsetForce(Fx*Forward,Tbl+Ant)
+}
+else    #Reverse thrust, applied at the front right and front left thrusters
+{
+    Sc:applyOffsetForce(Fx*Forward,Tfr+Ant)
+    Sc:applyOffsetForce(Fx*Forward,Tfl+Ant)
+}
+
+#Stabilisation (pitch yaw X Z)
+Sc:applyOffsetForce( (Ftfz)*Up+Ftfy*Right, Tf+Ant)
+Sc:applyOffsetForce( (Ftbz)*Up+Ftby*Right, Tb+Ant)
+
+#Roll
+Sc:applyOffsetForce(-Fr*Up, Tr+Ant)
+Sc:applyOffsetForce(Fr*Up, Tl+Ant)
+
+#Hover
+Sc:applyOffsetForce(Fhover*Up, Thf+Ant)
+Sc:applyOffsetForce(Fhover*Up, Thb+Ant)
+
+
+
+##Thrusters' sounds' pitch. The higher the thrust, the higher the pitch.
+soundPitch(1, round((abs(Fx)/Fxmax)*Soundpitch) )
+soundPitch(2, round((max(abs(Ftfz),abs(Ftbz),abs(Ftfy),abs(Fr))/Fmax)*Soundpitch) )
+soundPitch(4, round((abs(Fhover)/Fhovermax)*Soundpitch) )
+
+##Ship's status notification
+if(Hover&$Hover)    #When hover thrusters are activated
+{
+    Sc:soundPlay(3,1,"buttons/button17.wav")
+    Controls["Seat",entity]:hintDriver("[SCC] Hover thrusters on",3)
+}
+elseif(!Hover&$Hover) #When hover thrusters are deacticated
+{
+    Sc:soundPlay(3,1,"buttons/button17.wav")
+    Controls["Seat",entity]:hintDriver("[SCC] Hover thrusters off",3)
+}
+
+if(Drift&$Drift)    #When translation stabilisation is turned off
+{
+    Sc:soundPlay(3,1,"buttons/button17.wav")
+    Controls["Seat",entity]:hintDriver("[SCC] Translation stabilisation off",3)
+    hint("[SCC] Stabilisation off",3)
+}
+elseif(!Drift&$Drift)    #When translation stabilisation is turned on
+{
+    Sc:soundPlay(3,1,"buttons/button17.wav")
+    Controls["Seat",entity]:hintDriver("[SCC] Translation stabilisation on",3)
+    hint("[SCC] Stabilisation on",3)
+}
+
+if(Freex&$Freex)    #When Thrust control is set to manual
+{
+    Sc:soundPlay(6,1,"buttons/blip2.wav")
+    Controls["Seat",entity]:hintDriver("[SCC] Manual thrust control",3)
+}
+elseif(!Freex&$Freex) #When Thrust control is set to automatic
+{
+    Sc:soundPlay(6,1,"buttons/button17.wav")
+    Controls["Seat",entity]:hintDriver("[SCC] Automatic thrust control",3)
+}
+
+
+
+## Thrusters' 3D Holograms (displays thrust using E2's 3D holograms functions)
+if(Holograms)
+{
+    
+    #Thrusters' 3D holograms creation
+    if(first() | dupefinished())
+    {
+        if(Sc:model()=="models/af/aff/usn/heimdal.mdl")   #Preset for AFF's Heimdal
+        {
+            Heimdal=1
+            Fighter=0
+            Holos=10
+        }
+        elseif(Sc:model()=="models/ships/ngm_fighter.mdl")  #Preset for Eternal Silence's NGM Fighter
+        {
+            Heimdal=0
+            Fighter=1
+            Holos=11
+        }
+        else    #Any other ship
+        {
+            Heimdal=0
+            Fighter=0
+            Holos=10
+        }
+        
+        #Common to all thrusters
+        for(K=1,Holos,1)
+        {
+            holoCreate(Hindex+K)
+            holoModel(Hindex+K,"sphere")
+            holoDisableShading(Hindex+K,1)
+            holoColor(Hindex+K,vec(255,255,255),150)
+            holoVisible(Hindex+K,players(),1)
+        }
+
+        #Stabilisation [1-6]
+        for(K=1,6,1)
+        {
+            holoMaterial(Hindex+K,"models/alyx/emptool_glow") #Defines the stabilisation thrusters' texture
+        }
+        #Forward and hover
+        for(K=7,Holos,1)
+        {
+            holoMaterial(Hindex+K,"models/weapons/v_crossbow/rebar_glow") #Define other thrusters' texture (Forward, reverse, hover)
+        }
+    }
+    
+    #Setting angle for stabilisation thrusters
+    for(J=1,6)
+    {
+        holoAng(Hindex+J,Sc:angles())
+    }
+    
+    ##Stabilisation thrusters
+
+    #Front vertical (Pitch, Z)[1]
+    Hltfz=( (Ftfz)/Fmax)*Hlmax*random(0.95,1.05)
+    holoPos(Hindex+1,Tf-0.5*Hltfz*Up +50*Fighter*Forward)
+    holoScaleUnits(Hindex+1, vec(Hw*Hltfz,Hw*Hltfz,Hltfz))
+    
+
+    #Back vertical (Pitch, Z)[2]
+    Hltbz=( (Ftbz)/Fmax)*Hlmax*random(0.95,1.05)
+    holoPos(Hindex+2,Tb-0.5*Hltbz*Up +80*Heimdal*Forward+60*Fighter*Forward)
+    holoScaleUnits(Hindex+2, vec(Hw*Hltbz,Hw*Hltbz,Hltbz) )
+    
+
+    #Front horizontal (Yaw, Y)[3]
+    Hltfy=(Ftfy/Fmax)*Hlmax*random(0.95,1.05)
+    holoPos(Hindex+3,Tf-0.5*Hltfy*Right +50*Fighter*Forward-20*Fighter*Up)
+    holoScaleUnits(Hindex+3, vec(Hw*Hltfy, Hltfy ,Hw*Hltfy) )
+
+    #Back horizontal (Yaw, Y)[4]
+    Hltby=(Ftby/Fmax)*Hlmax*random(0.95,1.05)
+    holoPos(Hindex+4,Tb-0.5*Hltby*Right + (80*Heimdal+50*Fighter)*Forward-80*Fighter*sign(Ftby)*Right+25*Fighter*Up)
+    holoScaleUnits(Hindex+4, vec(Hw*Hltby, Hltby ,Hw*Hltby) )
+    
+
+    #Roll right [5]
+    Hrr=(Fr/Fmax)*Hlmax*random(0.95,1.05)
+    holoPos(Hindex+5,Tr+0.5*Hrr*Up -60*(Heimdal|Fighter)*Forward+(-20+50*sign(Fr))*(Heimdal)*Up)
+    holoScaleUnits(Hindex+5, vec(Hw*Hrr,Hw*Hrr,Hrr) )
+
+    #Toll left [6]
+    Hrl=(Fr/Fmax)*Hlmax*random(0.95,1.05)
+    holoPos(Hindex+6,Tl-0.5*Hrl*Up -60*(Heimdal|Fighter)*Forward+(-20-50*sign(Fr))*(Heimdal)*Up)
+    holoScaleUnits(Hindex+6, vec(Hw*Hrl,Hw*Hrl,Hrl) )
+
+    #Forward [7 - 8]
+    Hx=(Fx/Fmax)*Hlmax*random(0.95,1.05)
+    
+    if(Fx<0)    #reverse thrust (from the front thrusters)
+    {
+        if(Fighter)#Special holograms' position for the NGM Figher model
+        {
+            holoPos(Hindex+7, Tf-0.5*Hx*Forward+10*Right-20*Up+100*Forward )
+            holoPos(Hindex+8, Tf-0.5*Hx*Forward-10*Right-20*Up+100*Forward )
+        }
+        elseif(Heimdal)#Special holograms' position for the AFF Heimdal model
+        {
+            holoPos(Hindex+7, Tf-0.5*Hx*Forward+20*Right-20*Up+40*Forward)
+            holoPos(Hindex+8, Tf-0.5*Hx*Forward-20*Right-20*Up+40*Forward)
+        }
+        else #Any other model
+        {
+            holoPos(Hindex+7, Tfr-0.5*Hx*Forward)
+            holoPos(Hindex+8, Tfl-0.5*Hx*Forward)
+            
+        }
+        
+    }
+    else    #forward thrust (from the back thrusters)
+    {
+        if(Fighter) #Special holograms' position for the NGM Figher model
+        {
+            holoPos(Hindex+7, Tb-0.5*Hx*Forward+60*Right+80*Forward+10*Up)
+            holoPos(Hindex+8, Tb-0.5*Hx*Forward-60*Right+80*Forward+10*Up)
+        }
+        elseif(Heimdal) #Special holograms' position for the AFF Heimdal model
+        {
+            holoPos(Hindex+7, Tb-0.5*Hx*Forward+70*Right+100*Forward)
+            holoPos(Hindex+8, Tb-0.5*Hx*Forward-70*Right+100*Forward)
+        }
+        else #Any other model
+        {
+            holoPos(Hindex+7, Tbr-0.5*Hx*Forward)
+            holoPos(Hindex+8, Tbl-0.5*Hx*Forward)
+            
+        }
+        
+    }
+    
+    holoScaleUnits(Hindex+7, vec(Hx,Hw*Hx,Hw*Hx) )
+    holoScaleUnits(Hindex+8, vec(Hx,Hw*Hx,Hw*Hx) )
+    
+    holoAng(Hindex+7, Sc:angles()+ang(0,0,random(0,360)))
+    holoAng(Hindex+8, Sc:angles()+ang(0,0,random(0,360)))
+    
+
+
+
+    #Hover thrusters [9] (+[10] if Heimdal) (+ [10 - 11] if fighter)
+    Hhover=( (Fhover)/Fmax)*Hlmax*random(0.95,1.05)
+      
+    if(Fighter)   #Special holograms' position for the NGM Figher model
+    {
+        holoScaleUnits(Hindex+9, vec(Hw*Hhover,Hw*Hhover,Hhover))
+        holoAng(Hindex+9, Sc:angles())
+        holoScaleUnits(Hindex+10, vec(Hw*Hhover,Hw*Hhover,Hhover))
+        holoAng(Hindex+10, Sc:angles())
+        holoScaleUnits(Hindex+11, vec(Hw*Hhover,Hw*Hhover,Hhover))
+        holoAng(Hindex+11, Sc:angles())
+        
+        holoPos(Hindex+9, Masscenter-10*Up+155*Forward-0.5*Hhover*Up)
+        holoPos(Hindex+10, Masscenter-10*Up-100*Forward+150*Right-0.5*Hhover*Up)
+        holoPos(Hindex+11, Masscenter-10*Up-100*Forward-150*Right-0.5*Hhover*Up)
+    }
+    else
+    {
+        holoScaleUnits(Hindex+9, vec(Hw*Hhover,Hw*Hhover,Hhover))
+        holoAng(Hindex+9, Sc:angles())
+        holoScaleUnits(Hindex+10, vec(Hw*Hhover,Hw*Hhover,Hhover))
+        holoAng(Hindex+10, Sc:angles())
+        
+        holoPos(Hindex+9, Thf-0.5*Hhover*Up)
+        holoPos(Hindex+10, Thb-0.5*Hhover*Up)
+    }
+    
+    if(first() | dupefinished())
+    {
+        #Parenting Holograms to the ship so they move with it.
+        for(L=1,Holos)
+        {
+            holoParent(Hindex+L,Sc)
+        }
+    }
+}
+
+#[
+Changelog
+
+    13.7
+        Additional hover thruster
+
+    13.6
+        Fixed thrusters
+
+    13.5
+        Changed input format
+        optimized ops
+
+    13.4
+        Added Hover thruster
+        Fixed Thruster de-axing
+
+]#
+
+#SpaceCraft Control v13.7 by XrayIndia.

@@ -1,0 +1,55 @@
+@name Screen Display
+@inputs [K1 K2 K3 K4 K5 K6]:wirelink
+@outputs [Door Alarm]:number
+@outputs [S1 S2 S3 S4]:string [FGColor BGColor]:vector
+@persist [Door Alarm]:number
+@persist [S1 S2 S3 S4]:string [FGColor BGColor]:vector
+
+runOnTick(1)
+
+if(dupefinished()){
+    reset()
+}
+
+if(first()){
+    S1="Gun Shop"
+    S2="PM"
+    S3="if unavaliable"
+    S4="Gun Shop"
+    FGColor=vec(255,255,255)
+    BGColor=vec(20,20,20)
+    Door=0
+    Alarm=0
+}
+
+if(
+K1["Valid",number]|
+K2["Valid",number]|
+K3["Valid",number]|
+K4["Valid",number]|
+K5["Valid",number]|
+K6["Valid",number]
+){
+    timer("Door",5000)
+    Door=1
+}
+
+if(
+K1["Invalid",number]|
+K2["Invalid",number]|
+K3["Invalid",number]|
+K4["Invalid",number]|
+K5["Invalid",number]|
+K6["Invalid",number]
+){
+    timer("Alarm",5000)
+    Alarm=1
+}
+
+if(clk("Door")){
+    Door=0
+}
+
+if(clk("Alarm")){
+    Alarm=0
+}

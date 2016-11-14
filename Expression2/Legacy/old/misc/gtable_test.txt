@@ -1,0 +1,20 @@
+@name 
+@inputs 
+@outputs Test:number
+@persist Positions:gtable [BasePos IcePos]:array
+@trigger 
+
+runOnTick(1)
+
+if(first()){
+    Positions = gTable("Positions",0)
+    Positions[1,array]=BasePos
+    Positions[2,array]=IcePos
+}
+BasePos=Positions[1,array]
+IcePos=Positions[2,array]
+
+Test=BasePos[1,number]
+
+Positions[1,array]=BasePos
+Positions[2,array]=IcePos

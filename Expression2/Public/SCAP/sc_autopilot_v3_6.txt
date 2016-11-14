@@ -1,0 +1,1172 @@
+@name sc autopilot v3 6
+
+##Inputs
+#Menu inputs 
+@inputs Coord:vector Nextin Previn Enterin Cancelin
+
+#Other inputs
+@inputs Plug:entity Plugwl:wirelink Rs:wirelink 
+
+#Optional: Manual control inputs
+@inputs Controls:wirelink Scin:entity
+
+##Outputs
+@outputs Xout Yout Zout Pout Qout Rout Fire Hoverout
+@outputs Process:string Task:string Menu:string
+
+##Persist
+@persist Sc:entity
+
+@persist Dest1temp:vector Dest2temp:vector Dock1temp:entity Dock2temp:entity Targettemp:entity 
+@persist Dest1:vector Dest2:vector Dock1:entity Dock2:entity Undock:entity Target:entity
+@persist Land1pos:vector Land2pos:vector Landpos:vector Takeoffpos:vector Flydest:vector 
+
+@persist Taskarray:array Tasks Tasksel Tasktemp 
+
+#Menu persist
+@persist Next Prev Enter Cancel Apstart Noex
+@persist Menulast:string
+
+@persist Docked Landed Todock2 Flyaway
+@persist Dtotarget Dtoflydest
+
+#CAS persist
+@persist Omega Teta Cashit Avoidpos:vector Cas
+
+@trigger none
+
+#[
+
+SpaceCraft AutoPilot V3.6 by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+
+
+
+interval(10)
+
+###Parameters
+#Speed (remark: not SCC -> % of max speed set in SCC)
+Vrot=0.7
+Vfly=0.5
+
+Vdock=0.2
+Vdockyz=0.5
+
+Vland=0.3
+Vlandx=0.05
+Vlandy=0.5
+
+Vtakeoff=1
+
+Vangreg=3 #needs to be uneven
+
+
+#Distances
+Ddockwp=2000
+Dundock=2000
+Dlandwp=1500
+
+Dbrakefly=3000
+
+Dbrakedock=0.3*Ddockwp
+Dbrakedockyz=100
+
+Dbrakeland=0.4*Dlandwp
+Dbrakelandxy=Dbrakedockyz
+
+Dattackmin=3000
+Dattackmax=8000
+
+Flymargin=50
+Dockmargin=100
+Landmargin=Dockmargin
+
+
+#Angles
+Abrake=35
+Adock=0.4
+Aland=Adock
+Afire=3
+
+#Other
+Casoffdist=3000
+Casrange=2000
+Casmargin=500
+Dockdetectrange=2000
+Targetdetectrange=Dockdetectrange
+
+Hintduration=3
+
+
+###Initialisation
+if(first() | dupefinished())
+{
+    if(!Scin) #Defining the object considred as the spacecraft to control
+    {
+        Sc=entity():isWeldedTo()    #Usually, the object the expression is attached to
+    }
+    else    #if a different model than the one the expression is welded on is used
+    {
+        Sc=Scin
+    }
+    
+    # Variables' intial state values
+    Menu="Taskset"
+    Menulast="invalid"   #Used to display menu messages only once
+    Noex=0
+    Apstart=0    #Used to start Autopilot
+    
+    Task="Stop"
+    Tasktemp=1  #Menu output
+    Tasksel=1 #Menu slection variable
+    
+    Process="Idle"
+    
+    Flyaway=0    #Gets away from target
+    Todock2=0    #If the cargo is full, Destination changes
+    Hoverout=0    #Activates hover thruster
+
+    Omega=0   #CAS scanning angle 1
+    Teta=0  #CAS scanning angle 2
+    
+    #Tasksarray  #Stop is 1
+    Taskarray=array("Stop", "Moveto", "Dockto", "Land", "Landanddock", "Attack", "Rtspacespace", "Rtlandland", "Rtspaceland", "Rtlandspace", "Follow")
+    Tasks=Taskarray:count()
+    
+    soundPlay(5,2,"buttons/button6.wav")
+    hint("[SCAP] SpaceCraft AutoPilot v3.6 by XrayIndia. Initialisation successful",Hintduration)
+}
+#End of initialisation
+
+
+#Input internalisation
+
+#Menu navigation
+Next=Nextin
+Prev=Previn
+Enter=Enterin
+Cancel=Cancelin
+
+Xin=Controls["Xout",number]
+Yin=Controls["Yout",number]
+Zin=Controls["Zout",number]
+
+Pin=Controls["Pout",number]
+Qin=Controls["Qout",number]
+Rin=Controls["Rout",number]
+
+Hoverin=Controls["Hoverout",number]
+
+Docked=Plugwl["A",number]
+Plugwl["A",number]=1
+
+#Rs
+Canin=Rs["Canin",number]
+Canout=Rs["Canout",number]
+
+
+
+
+###Flight Datas (Q: Yaw)
+#Position
+Pos=Sc:pos()
+
+#Angles
+P=Sc:angles():pitch()
+Q=Sc:angles():yaw() #Necessary?
+R=Sc:angles():roll()
+
+
+
+#Landed
+rangerFilter(Sc)
+Landed=rangerOffset(0.45*Sc:boxSize():y(),Sc:boxCenterW(),-Sc:up() ):hit()
+
+
+
+
+
+
+
+### Menu
+## Taskset
+if(Menu=="Taskset")
+{
+    #Notification
+    if(Menulast!=Menu)
+    {
+        hint("[SCAP] Menu: Select task",Hintduration)
+        Tasksel=1
+    }
+    Menulast=Menu
+
+    if(Next & $Next)
+    {
+        Tasksel++
+        
+        if(Tasksel>Tasks)
+        {
+            Tasksel=1
+        }
+        
+        entity():owner():soundPlay(1,1,"buttons/button16.wav")
+        hint("[SCAP] Task selection: "+Taskarray[Tasksel,string],Hintduration)
+    }
+    
+    if(Prev & $Prev)
+    {
+        Tasksel--
+    
+        if(Tasksel<1)
+        {
+            Tasksel=Tasks
+        }
+        
+        entity():owner():soundPlay(1,1,"buttons/button16.wav")
+        hint("[SCAP] Task selection: "+Taskarray[Tasksel,string],Hintduration)
+    }
+    
+    #To next menu
+    if(Enter & $Enter & !Noex)
+    {
+        Noex=1 
+        
+        Tasktemp=Tasksel
+        
+        Tasksel=1
+        
+        entity():owner():soundPlay(2,1,"buttons/button18.wav")
+        hint("[SCAP] Task set to: " +Taskarray[Tasktemp,string],Hintduration)
+        
+        if(Tasktemp==1)
+        {
+            Apstart=1
+        }
+        elseif(Tasktemp==6 |Tasktemp==11)
+        {
+            Menu="Targetset"
+        }
+        else
+        {
+            Menu="Dest1set"
+        }
+    }
+}
+
+
+##Dest1set
+if(Menu=="Dest1set")
+{
+    #Notification
+    if(Menulast!=Menu)
+    {
+        if(Tasktemp>=7)
+        {
+            hint("[SCAP] Menu: Select resources origin",Hintduration)
+        }
+        else
+        {
+            hint("[SCAP] Menu: Select primary destination",Hintduration)
+        }
+    }
+    Menulast=Menu
+    
+    #To next menu
+    if(Enter & $Enter & !Noex)
+    {
+        Noex=1
+        
+        Dest1temp=Coord
+
+        findByClass("gmod_wire_socket")
+        Dock1temp=findClosest(Coord)
+        
+        
+        
+        entity():owner():soundPlay(2,1,"buttons/button18.wav")
+        
+        
+        if(Taskarray[Tasktemp,string]!="Moveto" & Taskarray[Tasktemp,string]!="Land" )
+        {
+            if( Dock1temp & (Dock1temp:pos()-Coord):length()<Dockdetectrange)
+            {
+                entity():owner():soundPlay(2,1,"buttons/button18.wav")
+                
+                if(Tasktemp>=6)
+                {
+                    hint("[SCAP] Resources origin set set",Hintduration)
+                    Menu="Dest2set"
+                }
+                else
+                {
+                    hint("[SCAP] Docking destination set",Hintduration)
+                    Apstart=1
+                    Menu="Taskset"
+                }
+                
+            }
+            else
+            {
+                entity():owner():soundPlay(2,1,"buttons/button8.wav")
+                hint("[SCAP] Error: No dock found near coordinates",Hintduration)
+            }
+                
+        }
+        elseif(Taskarray[Tasktemp,string]=="Moveto" | Taskarray[Tasktemp,string]=="Land" )
+        {
+            Apstart=1
+            hint("[SCAP] Destination set",Hintduration)
+            Menu="Taskset"
+        }
+    }
+    
+    #Cancel
+    if(Cancel & Cancel & !Noex)
+    {
+        Noex=1
+        
+        entity():owner():soundPlay(3,1,"buttons/button19.wav")
+        hint("[SCAP] Menu: Cancel",Hintduration)
+        Menu="Taskset"
+    }
+}
+
+
+##Dest2set (RT)
+if(Menu=="Dest2set")
+{
+    #Notification
+    if(Menulast!=Menu)
+    {
+        hint("[SCAP] Menu: Select resources destination",Hintduration)
+    }
+    Menulast=Menu
+    
+    if(Enter & $Enter & !Noex)
+    {
+        Noex=1
+
+        Dest2temp=Coord
+        
+        findByClass("gmod_wire_socket")
+        Dock2temp=findClosest(Coord)
+        
+        if( Dock2temp & (Dock2temp:pos()-Coord):length()<Dockdetectrange & Dock2temp!=Dock1temp)
+        {
+            entity():owner():soundPlay(2,1,"buttons/button18.wav")
+            hint("[SCAP] Resources destination set",Hintduration)
+        
+            Apstart=1
+            Menu="Taskset"
+        }
+        elseif( Dock2temp & (Dock2temp:pos()-Coord):length()<Dockdetectrange & Dock2temp==Dock1temp)
+        {
+            entity():owner():soundPlay(2,1,"buttons/button8.wav")
+            hint("[SCAP] Error: Resources origin and destination are the same",Hintduration)
+        }
+        else
+        {
+            entity():owner():soundPlay(2,1,"buttons/button8.wav")
+            hint("[SCAP] Error: No dock found near coordinates",Hintduration)
+        }
+    }
+    
+    #Cancel
+    if(Cancel & Cancel & !Noex)
+    {
+        Noex=1
+        
+        entity():owner():soundPlay(3,1,"buttons/button19.wav")
+        hint("[SCAP] Menu: Cancel",Hintduration)
+        Menu="Taskset"
+    }
+}
+
+
+##Targetset (Attack, Follow)
+if(Menu=="Targetset")
+{
+    #Notification
+    if(Menulast!=Menu)
+    {
+        hint("[SCAP] Menu: Select target",Hintduration)
+    }
+    Menulast=Menu
+    
+    #Apstart
+    if(Enter & $Enter & !Noex)
+    {
+        Noex=1
+        
+        findByClass("prop_physics")
+        Targettemp=findClosest(Coord)
+        
+        
+        if( Targettemp & (Targettemp:pos()-Coord):length()<Targetdetectrange)
+        {
+            entity():owner():soundPlay(2,1,"buttons/button18.wav")
+            hint("[SCAP] Target set",Hintduration)
+        
+            Apstart=1
+            Menu="Taskset"
+        }
+        else
+        {
+            entity():owner():soundPlay(2,1,"buttons/button8.wav")
+            hint("[SCAP] Error: No target found near coordinates",Hintduration)
+        }
+    }
+    
+    
+    #Cancel
+    if(Cancel & Cancel & !Noex)
+    {
+        Noex=1
+        
+        entity():owner():soundPlay(3,1,"buttons/button19.wav")
+        hint("[SCAP] Menu: Cancel",Hintduration)
+        Menu="Taskset"
+    }
+}
+
+Noex=0  #Used to Enter a menu only once
+
+### End of Menu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Autopilot start (Saving info and starting process)
+if(Apstart&$Apstart)
+{
+    #Saving Task and destination
+    Task=Taskarray[Tasktemp,string]
+    Tasktemp=1  #Necessary? probably...
+    
+    Dest1=Dest1temp
+    Dest2=Dest2temp
+    
+    Dock1=Dock1temp
+    Dock2=Dock2temp
+    
+    #Landind positions, need to stay constant even if socket is moving
+    Land1pos=Dock1:massCenter()+vec(300,0,0)
+    Land2pos=Dock2:massCenter()+vec(300,0,0)
+
+    Target=Targettemp
+    Todock2=0
+    Flyaway=0
+    
+    if(Task=="Stop")
+    {
+        Process="Idle"
+        hint("[SCAP] Autopilot off",Hintduration)
+    }
+    else
+    {
+        if(Docked & !Landed)
+        {
+            Process="Undocking"
+        }
+        if(Landed | (Landed & Docked) )
+        {
+            Process="Takingoff"
+        }
+        if(!Docked & !Landed)
+        {
+            Process="Flying"
+        }
+        
+        hint("[SCAP] Autopilot on",Hintduration)
+    }
+    
+    Apstart=0
+}
+# End of Autopilot start
+
+
+
+
+
+#Saving Undock
+if((Docked&$Docked) | (Docked& (first() | dupefinished()) ) )
+{
+    findByClass("gmod_wire_socket")
+    Undock=findClosest(Pos)
+}
+
+#Saving Takeoffpos
+if( (Landed&$Landed) | ( (first() | dupefinished())&Landed) )
+{
+    Takeoffpos=Pos
+}
+
+
+
+
+
+
+
+### Point computing
+##Docks (In case they move) (proper to both docking and flying)
+Dock1pos=Dock1:massCenter()
+Dock1wp=Dock1pos+Ddockwp*Dock1:forward()
+
+Dock2pos=Dock2:massCenter()
+Dock2wp=Dock2pos+Ddockwp*Dock2:forward()
+
+Undockpos=Undock:massCenter()
+Undockwp=Undockpos+Ddockwp*Undock:forward()
+
+
+
+##Depending on tasks
+if(Task=="Moveto")
+{
+    if(!Cas){ Flydest=Dest1 }
+}
+    
+elseif(Task=="Dockto")
+{
+    Dock=Dock1
+    Dockpos=Dock1pos
+    Dockwp=Dock1wp
+    
+    if(!Cas){ Flydest=Dockwp}
+}
+
+elseif(Task=="Land")
+{
+    Landpos=Dest1
+    Landwp=Landpos+vec(0,0,Dlandwp)
+    
+    if(!Cas){Flydest=Landwp}
+}
+elseif(Task=="Landanddock")
+{
+    Landpos=Land1pos
+    
+    Landwp=Landpos+vec(0,0,Dlandwp)
+    if(!Cas){Flydest=Landwp}
+}
+
+elseif(Task=="Attack")
+{
+    Dtotarget=(Pos-Target:pos()):length()
+    
+    if(Dtotarget<Target:radius()+Dattackmin)
+    {
+        Flyaway=1
+    }
+    if(Dtotarget>Target:radius()+Dattackmax)
+    {
+        Flyaway=0
+    }
+
+    if(!Flyaway)
+    {
+        if(!Cas){ Flydest=Target:boxCenterW() }
+    }
+    elseif(Flyaway)
+    {
+        if(!Cas){ Flydest=Pos+(Pos-Target:boxCenterW()) }
+    }
+}
+
+#RT
+elseif(Task=="Rtspacespace")
+{
+    if(!Todock2)
+    {
+        Dock=Dock1
+        Dockpos=Dock1pos
+        Dockwp=Dock1wp
+    }
+    elseif(Todock2)
+    {
+        Dock=Dock2
+        Dockpos=Dock2pos
+        Dockwp=Dock2wp
+    }
+    
+    if(!Cas){ Flydest=Dockwp }
+}
+
+elseif(Task=="Rtlandland")
+{
+
+    if(!Todock2)
+    {
+        Landpos=Land1pos
+    }
+    elseif(Todock2)
+    {
+        Landpos=Land2pos
+    }
+    
+    Landwp=Landpos+vec(0,0,Dlandwp)
+    if(!Cas){ Flydest=Landwp }
+}
+
+elseif(Task=="Rtspaceland")
+{
+    if(!Todock2)
+    {
+        Dock=Dock1
+        Dockpos=Dock1pos
+        Dockwp=Dock1wp
+        if(!Cas){ Flydest=Dockwp }
+    }
+    elseif(Todock2)
+    {
+        Landpos=Land2pos
+        Landwp=Landpos+vec(0,0,Dlandwp)
+        if(!Cas){ Flydest=Landwp }
+    }
+}
+
+elseif(Task=="Rtlandspace")
+{
+    if(!Todock2)
+    {
+        Landpos=Land1pos
+        Landwp=Landpos+vec(0,0,Dlandwp)
+        if(!Cas){ Flydest=Landwp }
+    }
+    elseif(Todock2)
+    {
+        Dock=Dock2
+        Dockpos=Dock2pos
+        Dockwp=Dock2wp
+        if(!Cas){ Flydest=Dockwp }
+    }
+}
+elseif(Task=="Follow")
+{
+    Followpos=Target:boxCenterW()-(2*Target:boxSize():x()+300)*Target:forward()+0.5*Target:boxSize():y()*Target:right()
+    Dtofollow=(Pos-Followpos):length()
+    if(!Cas){ Flydest=Followpos }
+}
+
+
+
+## Bearings and elevations (Put in associated process?)
+
+Dockbearing=Plug:bearing(Plug:massCenter()+Dock:forward())
+Dockelevation=Plug:elevation(Plug:massCenter()+Dock:forward())
+Dockroll=(-Plug:angles():roll()+Dock:angles():roll())
+
+Undockbearing=Plug:bearing(Plug:massCenter()+Undock:forward())
+Undockelevation=Plug:elevation(Plug:massCenter()+Undock:forward())
+
+Landbearing=Sc:bearing(Pos+vec(-1,0,0))
+
+## Distances to points
+
+Dtodock=(Plug:massCenter()-Dock:massCenter()):length() #Necessary?
+
+Dtodockx=-Plug:toLocal(Dockpos):x()
+Dtodocky=Plug:toLocal(Dockpos):y()
+Dtodockz=Plug:toLocal(Dockpos):z()
+
+Dtoundock=(Plug:massCenter()-Undock:massCenter()):length()
+
+Dtoland=(Pos-Landpos):length()
+
+Dtolandx=Sc:toLocal(Landpos):x()
+Dtolandy=-Sc:toLocal(Landpos):y()
+Dtolandz=Sc:toLocal(Landpos):z()
+
+Dtotakeoffpos=(Takeoffpos-Pos):length()
+# End of point computing
+
+
+
+
+
+
+### Processes
+## Idle
+if(Process=="Idle")
+{
+    Cas=0
+    Fire=0
+    
+    if(Task=="Stop")
+    {
+        if(->Controls)
+        {
+                
+            Xout=Xin
+            Yout=Yin
+            
+            Hoverout=Hoverin
+            Zout=Zin
+
+            Driftout=Controls["Driftout",number]
+            Freexout=Controls["Freexout",number]
+
+            Pout=Pin
+            Qout=Qin
+            Rout=Rin
+        }
+        else
+        {
+            Xout=0
+            Yout=0
+        
+            Hoverout=0
+            Zout=0
+        
+            Driftout=0
+            Freexout=0
+        
+            Pout=0
+            Qout=0
+            Rout=0
+        }
+        
+    }
+    else
+    {
+        Xout=0
+        Yout=0
+        
+        Hoverout=0
+        Zout=0
+        
+        Driftout=0
+        Freexout=0
+        
+        Pout=0
+        Qout=0
+        Rout=0
+    }
+    
+    #Next process (RT)
+    if(Docked &!Canin &!Todock2)
+    {
+        if(Task=="Rtspacespace" | Task=="Rtspaceland")
+        {
+            hint("[SCAP] Cargo full. Undocking",Hintduration)
+            Process="Undocking"
+            Todock2=1
+        }
+        
+        elseif(Task=="Rtlandland" | Task=="Rtlandspace")
+        {
+            hint("[SCAP] Cargo full. Takeoff",Hintduration)
+            Process="Takingoff"
+            Todock2=1
+        }
+    }
+    
+    if(Docked &!Canout &Todock2)
+    {
+        if(Task=="Rtspacespace" | Task=="Rtlandspace")
+        {
+            hint("[SCAP] Cargo empty. Undocking",Hintduration)
+            Process="Undocking"
+            Todock2=0
+        }
+        if(Task=="Rtlandland" | Task=="Rtspaceland")
+        {
+            hint("[SCAP] Cargo empty. Takeoff",Hintduration)
+            Process="Takingoff"
+            Todock2=0
+        }
+    }
+    
+    #Next process (Follow)
+    #Special: Task Follow
+    if(Task=="Follow" & Dtofollow>Flymargin)
+    {
+        Process="Flying"
+    }
+    
+}
+
+##Fly
+if(Process=="Flying")
+{
+    
+
+    #CAS (Collision Avoidance System)
+    rangerFilter(Sc)
+    rangerFilter(Plug)
+
+    Casstart=Sc:boxCenterW()+0.5*Sc:boxSize():x()*Sc:forward()
+    Casend=Sc:boxCenterW()+Casrange*Sc:forward()+0.6*sin(Omega)*Sc:boxSize():z()*Sc:up()+0.6*cos(Teta)*Sc:boxSize():y()*Sc:right()
+
+    Omega+=4
+    Teta=4*Omega
+
+    Casranger=rangerOffset(Casstart,Casend)
+    Cashit=Casranger:hit()
+    
+    if(Cashit & $Cashit & Dtoflydest>Casoffdist & Dtoundock>Casoffdist)
+    {
+        Cas=1
+        Obstacle=Casranger:entity()
+        Avoidpos=Obstacle:boxCenterW()+(Obstacle:radius()+1000)*Sc:right() #Needs to be saved only once
+        owner():soundPlay(6,3,"buttons/blip2.wav")
+        hint("[SCAP] Obstacle detected. Avoiding collision...",Hintduration)
+    }
+
+    if(Cas)
+    {
+        Flydest=Avoidpos
+    }
+    #End of CAS
+    
+    
+    
+    Flybearing=Sc:bearing(Flydest) #Moved from point computing because Flydest is altered by CAS
+    Flyelevation=Sc:elevation(Flydest)
+
+    Dtoflydest=(Pos-Flydest):length()    #moved from Point computing because Flydest is altered by CAS
+    
+
+
+    #Translation outputs
+    Xout=Vfly*clamp(Dtoflydest/Dbrakefly, -1, 1)*(((180-abs(Flybearing))/180)^Vangreg)*(((180-abs(Flyelevation))/180)^Vangreg)
+    Yout=0
+    
+    Hoverout=0
+    Zout=0
+
+    #Rotation outputs
+    Pout=Vrot*clamp(-Flyelevation/Abrake, -1, 1)
+    Qout=Vrot*clamp(-Flybearing/Abrake, -1, 1)
+    Rout=0
+
+
+    #CAS: Collision avoided
+    if(Cas&Dtoflydest<Casmargin)
+    {
+        Cas=0
+        hint("[SCAP] Collision avoided",Hintduration)
+    }
+    
+    ##Next process
+    if(!Cas & Dtoflydest<Flymargin+Sc:radius())
+    {
+        if(Task=="Moveto")
+        {
+            hint("[SCAP] Arrived at destination. Autopilot off",Hintduration)
+            Task="Stop"
+            Process="Idle"
+        }
+        elseif(Task=="Dockto")
+        {
+            hint("[SCAP] Arrived at docking approach waypoint",Hintduration)
+            Process="Docking"
+        }
+        elseif(Task=="Land" | Task=="Landanddock")
+        {
+            hint("[SCAP] Arrived at Landing approach waypoint",Hintduration)
+            Process="Landing"
+        }
+        
+        #RT
+        elseif(Task=="Rtspacespace")
+        {
+            if(Todock2)
+            {
+                hint("[SCAP] Arrived at resource destination docking approach waypoint",Hintduration)
+            }
+            elseif(!Todock2)
+            {
+                hint("[SCAP] Arrived at resource origin docking approach waypoint",Hintduration)
+            }
+            Process="Docking"
+        }
+        
+        elseif(Task=="Rtlandland")
+        {
+            if(Todock2)
+            {
+                hint("[SCAP] Arrived at resource destination landing approach waypoint",Hintduration)
+            }
+            elseif(!Todock2)
+            {
+                hint("[SCAP] Arrived at resource origin landing approach waypoint",Hintduration)
+            }
+            Process="Landing"
+        }
+        
+        elseif(Task=="Rtspaceland")
+        {
+            if(!Todock2)
+            {
+                hint("[SCAP] Arrived at resource origin docking approach waypoint",Hintduration)
+                Process="Docking"
+            }
+            
+            elseif(Todock2)
+            {
+                hint("[SCAP] Arrived at resource destination landing approach waypoint",Hintduration)
+                Process="Landing"
+            }
+        }
+        
+        elseif(Task=="Rtlandspace")
+        {
+            if(!Todock2)
+            {
+                hint("[SCAP] Arrived at resource origin landing approach waypoint",Hintduration)
+                Process="Landing"
+            }
+            elseif(Todock2)
+            {
+                hint("[SCAP] Arrived at resource destination docking approach waypoint",Hintduration)
+                Process="Docking"
+            }
+        }
+    }
+    
+    
+    #Special: Task attack
+    #Firing
+    if(max(abs(Flybearing),abs(Flyelevation))<Afire & Task=="Attack" & !Flyaway)
+    {
+        Fire=1
+    }
+    else
+    {
+        Fire=0
+    }
+    
+    if(Task=="Attack" & !Target)
+    {
+        hint("[SCAP] Target Destroyed. Autopilot off",Hintduration)
+        Process="Idle"
+    }
+    
+    #Special: Task Follow
+    if(Task=="Follow" & Dtofollow<Flymargin)
+    {
+        Process="Idle"
+    }
+}
+
+##Docking
+if(Process=="Docking")
+{
+    Hoverout=0
+    
+    if(max( abs(Dockbearing),abs(Dockelevation),abs(Dockroll) )<Adock)
+    {
+        
+        Yout=Vdockyz*clamp(Dtodocky/Dbrakedockyz,-1,1)
+        Zout=Vdockyz*clamp(Dtodockz/Dbrakedockyz,-1,1)
+        
+        if(max( abs(Dtodocky),abs(Dtodockz) )<Dockmargin)
+        {
+            Xout=Vdock*clamp(Dtodockx/Dbrakedock,-1,1)
+        }
+        else
+        {
+            Xout=0
+        }
+    }
+    else
+    {
+        Xout=0
+        Yout=0
+        Zout=0
+    }
+    
+    
+
+    Pout=Vrot*clamp(Dockelevation/Abrake, -1, 1)
+    Qout=Vrot*clamp(-Dockbearing/Abrake, -1, 1)
+    Rout=Vrot*clamp(-Dockroll/Abrake,-1,1)
+
+    #End of process
+    if(Docked)
+    {
+        if(Task=="Dockto")
+        {
+            hint("[SCAP] Docked at destination. Autopilot off",Hintduration)
+            Task="Stop"
+            Process="Idle"
+        }
+        elseif(Task=="Rtspacespace" | Task=="Rtspaceland" | Task=="Rtlandspace" | Task=="Rtlandland")
+        {
+            hint("[SCAP] Docked. Transfering resources",Hintduration)
+            Process="Idle"
+        }
+    }
+}
+
+##Undocking
+if(Process=="Undocking")
+{
+    Xout=-Vdock*(((180-Undockbearing)/180)^Vangreg)*(((180-Undockelevation)/180)^Vangreg)
+    Yout=0
+    
+    Hoverout=0
+    Zout=0
+
+    Pout=Vrot*clamp(Undockelevation/Abrake, -1, 1)
+    Qout=Vrot*clamp(-Undockbearing/Abrake, -1, 1)
+    Rout=0
+
+    #End of process
+    if(Dtoundock>=Dundock)
+    {
+        if(Process!="invalid") #process ="Flying" after all tasks
+        {
+            hint("[SCAP] Undocked",Hintduration)
+            Process="Flying"
+        }
+    }
+}
+
+##Landing
+if(Process=="Landing")
+{
+    #Translation
+    Hoverout=1
+    
+    if(Task=="Land")
+    {
+        if( max( abs(P),abs(R))<Aland ) #Not sure about this code
+        {
+            Xout=Vlandx*clamp(Dtolandx/Dbrakelandxy,-1,1)
+            Yout=Vlandy*clamp(Dtolandy/Dbrakelandxy,-1,1)
+            
+            if(max( abs(Dtolandy),abs(Dtolandx) )<Landmargin)
+            {
+                
+                Zout=Vland*clamp(Dtolandz/Dbrakeland,-1,0)
+            }
+            else
+            {
+                Zout=0
+            }
+        }
+        else
+        {
+            Xout=0
+            Yout=0
+            Zout=0
+        }
+    }
+    
+    elseif(Task!="Land")
+    {
+        if( max( abs(P),abs(R),abs(Landbearing) )<Aland ) #Not sure about this code
+        {
+            Xout=Vlandx*clamp(Dtolandx/Dbrakelandxy,-1,1)
+            Yout=Vlandy*clamp(Dtolandy/Dbrakelandxy,-1,1)
+            
+            if(max( abs(Dtolandy),abs(Dtolandx) )<Landmargin)
+            {
+                Zout=Vland*clamp(Dtolandz/Dbrakeland,-1,1)
+            }
+            else
+            {
+                Zout=0
+            }
+        }
+        else
+        {
+            Xout=0
+            Yout=0
+            Zout=0
+        }
+    }
+    
+    
+    
+    
+    #Rotation
+    if(Task!="Land") {Qout=Vrot*clamp(-Landbearing/Abrake, -1, 1)}
+    elseif(Task=="Land") {Qout=0}
+    
+    Pout=Vrot*clamp(-P/Abrake,-1,1)
+    Rout=Vrot*clamp(-R/Abrake,-1,1)
+    
+    #End of process
+    if(Landed)
+    {
+        if(Task=="Land")
+        {
+            hint("[SCAP] Landed at destination. Autopilot off",Hintduration)
+            Task="Stop"
+            Process="Idle"
+        }
+        if(Task=="Landanddock" & Docked)
+        {
+            hint("[SCAP] Landed and docked at destination. Autopilot off",Hintduration)
+            Task="Stop"
+            Process="Idle"
+        }
+        elseif( (Task=="Rtspacespace" | Task=="Rtspaceland" | Task=="Rtlandspace" | Task=="Rtlandland") & Docked )
+        {
+            hint("[SCAP] Landed and docked. Transfering resources",Hintduration)
+            Process="Idle"
+        }
+    }
+}
+
+
+##Taking off
+if(Process=="Takingoff")
+{
+    Xout=0
+    Yout=0
+    
+    Hoverout=1
+    Zout=Vtakeoff
+
+    Pout=Vrot*clamp(-P/Abrake,-1,1)
+    Qout=0
+    Rout=Vrot*clamp(-R/Abrake,-1,1)
+
+    #End of process
+    if(Dtotakeoffpos>Dlandwp)
+    {
+        if(Task!="invalid")
+        {
+            hint("[SCAP] Takeoff complete",Hintduration)
+            Process="Flying"
+        }
+    }
+}
+
+
+#[
+Changelog
+
+    v3.6 changed output format
+    v3.5 added dock detection range
+    V3.4 Cleaned up inputs and persist
+    V3.3 Added CAS
+
+]#
+
+#SpaceCraft AutoPilot v3.6 by XrayIndia

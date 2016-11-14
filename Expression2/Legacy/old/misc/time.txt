@@ -1,0 +1,10 @@
+@name Time
+@inputs Boom
+@outputs Time
+@persist LastTime
+@trigger 
+
+if(~Boom&Boom){
+    Time=$LastTime
+    LastTime=curtime()*1000
+}

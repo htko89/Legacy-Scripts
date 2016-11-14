@@ -1,0 +1,82 @@
+@name Core Mobile Relative
+@inputs [Eye Cam Pod]:wirelink [PodActive]:number #Core
+@inputs [Ctrl MCtrl Aux MVec]:vector #Controls
+@persist [Core]:entity #Core
+@persist [Cam1 Cam2]:entity [CamMode]:number #Camera
+@outputs [AT]:angle [VT]:vector #Debug
+
+#Core
+    if(dupefinished()){ #Duped
+        reset()
+    }
+    if(first()){
+        runOnTick(1)
+        Core = entity():isWeldedTo()
+        Eye["Enable",number] = 1
+        Pod["Crosshairs",number] = 1
+    }
+
+#Camera
+    if(first()){
+        VCam1 = Core:pos()+Core:forward()*50
+        Cam1 = holoCreate(100,VCam1,vec(),Core:angles())
+        VCam2 = Core:pos()+Core:forward()*-100+Core:up()*25
+        Cam2 = holoCreate(101,VCam2,vec(),Core:angles())
+        holoParent(100,Core)
+        holoParent(101,Core)
+        Cam["Parent",entity] = Core
+        Cam["Position",vector] = Cam2:pos()
+        Cam["Angle",angle] = Core:angles()
+    }
+    if(~PodActive){
+        Cam["Activated",number] = PodActive
+    }
+    if(~Aux&Aux:x()){
+        CamMode = (CamMode ? 0 : 1)
+        if(CamMode){
+            Cam["Position",vector] = Cam1:pos()
+        }else{
+            Cam["Position",vector] = Cam2:pos()
+        }
+    }
+
+#Orientation - Absolute
+    #Assignment
+    if(tickClk()){
+        if(PodActive){
+            AT = AT+ang(MVec)/2
+            ATRoll = -(Core:velL():y())
+            AT = AT:setRoll(ATRoll/200)
+            ATClamp = ang(90,180,35)
+            AT = clamp(angnorm(AT),-ATClamp,ATClamp)
+        }else{
+            AT = ang()
+        }
+    }
+    #Engine
+    if(tickClk()){
+        QT = quat(AT)
+        QC = quat(Core)
+        Q=QT/QC
+        QV=Core:toLocal(rotationVector(Q)+Core:pos())
+        Core:applyTorque((200*QV-50*Core:angVelVector())*Core:inertia())
+    }
+
+#Movement - Relative
+    #Assignment
+    if(tickClk()){
+        VT = vec()-Core:vel()*0.15
+        if(PodActive){
+            if(Ctrl){
+                VTMod = (Aux:z() ? 2.5 : 1) * 200
+                VT += Ctrl:x()*Core:right()*VTMod
+                VT += Ctrl:y()*Core:forward()*VTMod
+                VT += Ctrl:z()*Core:up()*VTMod
+            }
+        }
+    }
+    #Engine
+    if(tickClk()){
+         Core:applyForce(VT*Core:mass())
+    }
+

@@ -1,0 +1,27 @@
+@name Controls
+@inputs [Pod Eye]:wirelink [PodActive]:number #Core
+@outputs [Ctrl MCtrl Aux MVec]:vector
+
+#Core
+    if(dupefinished()){ #Duped
+        reset()
+    }
+    if(first()){
+        runOnTick(1)
+    }
+
+#Assignment
+    if(tickClk()){
+        if(PodActive){
+            Ctrl = vec(Pod["D",number]-Pod["A",number],Pod["W",number]-Pod["S",number],Pod["Space",number]-Pod["Alt",number])
+            MCtrl = vec(Pod["Mouse1",number],Pod["Mouse2",number],Pod["PrevWeapon",number]-Pod["NextWeapon",number])
+            Aux = vec(Pod["R",number],Pod["Light",number],Pod["Shift",number])
+            MVec = vec(-shift(Eye["XY",vector2]))
+            #MVec = MVec:setZ(Pod["D",number]-Pod["A",number])
+        }else{
+            Ctrl = vec()
+            MCtrl = vec()
+            Aux = vec()
+            MVec = vec()
+        }
+    }

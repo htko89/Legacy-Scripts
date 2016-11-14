@@ -1,0 +1,44 @@
+#Name
+@name Ring Weapons Platform
+
+#Inputs
+@inputs [Active]:number [Entity]:entity
+
+#Variables
+@persist [Angle AngleMult]:angle 
+@persist [Control Thrust ThrustMult Speed SpeedMult]:vector
+@persist [ShipCore]:entity
+
+#Trigger
+@trigger PodActive
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    runOnTick(1)
+    #Set variables
+    ShipCore=entity():isWeldedTo()
+}
+
+#Set Variables
+Forward=ShipCore:forward()
+Right=ShipCore:right()
+Up=ShipCore:up()
+ShipPosition=ShipCore:pos()
+
+#Position and Angle Control
+if(Active){
+    TarVector=Entity:pos()-ShipPosition
+    Angle=TarVector:toAngle():setRoll(0)
+}else{
+    Angle=ShipCore:angles():setRoll(0)
+    
+}
+ShipCore:setAng(Angle)
+if(!ShipCore:isPlayerHolding()){
+    ShipCore:propFreeze(1)
+}

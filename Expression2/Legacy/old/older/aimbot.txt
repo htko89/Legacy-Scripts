@@ -1,0 +1,80 @@
+@name AimBot
+@inputs [E]:entity Entity:entity AimPos:vector InputPos:vector
+@outputs [Ready Fire Equipped]:number Name:string
+@persist Enti:entity Player:number Players:array
+@persist [TarVector FloatVector]:vector
+@model
+
+runOnTick(1)
+
+if(dupefinished()){
+    reset()
+}
+
+Equipped=(owner():weapon():type():find("fist") ? 1 : 0)
+Fire=(Equipped&owner():keyAttack1() ? 1 : 0)
+
+#Movement Code
+if(first()){
+    E=entity():isWeldedTo()
+    E:setMass(64)
+    for(Loop=1,E:hasConstraints("Weld")){
+        E:isWeldedTo(Loop):setMass(1)
+    }
+}
+#AimPos=owner():aimPos()
+Players=players()
+if(Entity){
+    Enti=Entity
+    TarP=Enti:shootPos()
+}elseif(AimPos){
+    TarP=AimPos
+}
+
+if(!Entity&!AimPos){
+    if(Equipped&owner():keyAttack2()){
+        timer("test",200)
+    }
+}
+if(!Entity&!AimPos){
+    if(clk("test")){
+        Player=(Player<Players:count()? Player+1 : 0)
+    }
+}
+if(!Entity&!AimPos){
+    Player=(Player>Players:count()? 0 : Player)
+    #if(!owner():isAlive()){
+    #    for(Loop=1,Players:count()){
+    #        Player=(Players[Loop,entity]==owner() ? Loop : Player)
+    #    } Loop=1
+    #}
+    Enti=Players[Player,entity]
+}
+if(!Entity&!AimPos){
+    #if(!Enti:isAlive()|Enti:inVehicle()|clk("set")|Enti==owner()){
+    #    Player++
+    #}
+    #TarP=Enti:shootPos()
+}
+if(Enti==owner()){
+    Offset=50
+}else{
+    Offset=0
+}
+Name=Enti:name()
+#if(Equipped){
+    CurP=E:pos()
+    TarVector=(TarP-CurP)
+    FloatVector=((!InputPos ? TarP-Enti:eye()*30 : InputPos)-CurP)
+    TarQ = quat(TarVector:toAngle())
+    CurQ = quat(E)
+    Q = TarQ/CurQ
+    V = E:toLocal(rotationVector(Q)+E:pos())
+    E:applyTorque((350*V - 45*E:angVelVector())*E:inertia())  
+    E:applyForce((15*FloatVector+$FloatVector*30)*E:mass())
+    Ready=(FloatVector:length()<10&Enti:isAlive() ? 1 : 0)
+    #if(Ready){
+    #    timer("set",10000)
+    #}
+#}
+

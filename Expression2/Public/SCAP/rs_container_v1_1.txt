@@ -1,0 +1,77 @@
+@name rs container v1 1 by XrayIndia
+@inputs In Out
+@outputs Energypercent
+@outputs Canin Canout
+@persist Energy E:entity
+@trigger none
+
+#[
+
+Resource System Container by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+interval(100)
+
+if(first() |dupefinished())
+{
+    E=entity():isWeldedTo()
+    Energy=0
+    #E:setMaterial("models/props_wasteland/lighthouse_stairs")
+}
+
+#calcul de la capacite en fonction du volume
+Volume=round(E:volume())
+Capacity=0.8*Volume
+
+#vitesse de tranfert pour transfert entre batteries
+Transrate=50
+
+#signal de possibilite d'entree
+if(Energy<Capacity)
+{
+    Canin=Transrate
+}
+else
+{
+    Canin=0
+}
+if(Energy>Capacity)
+{
+    Energy=Capacity
+}
+if(Energy<0)
+{
+    Energy=0
+}
+
+#signal de possibilite de sortie
+if(Energy>0 & ->Out)
+{
+    Canout=Transrate
+}
+else
+{
+    Canout=0
+}
+
+
+if(In>0&Canin)
+{
+    Energy+=In
+}
+
+if(Out>0&Canout)
+{
+    Energy-=Out
+}
+
+#output: pourcentage d'energie par rapport a la capacite totale
+Energypercent=round(  (Energy/Capacity)*100  )

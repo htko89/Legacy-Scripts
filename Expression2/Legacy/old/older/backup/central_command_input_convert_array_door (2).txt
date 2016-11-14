@@ -1,0 +1,27 @@
+@name Central Command Input Convert Array Door
+@inputs Reset:number
+@inputs Keyboard:number Input1:number Input2:number Input3:number
+@outputs Output:array
+@persist Output:array #Persistent i/o.
+@persist Outputs:number Loop:number #System.
+@trigger all
+
+if(first()){ #System first start.
+    #Output options.
+        Outputs=3
+}
+
+if(Input1){
+    Output[1,number]=Input1
+}else{
+    Output[1,number]=Keyboard
+}
+
+Output[2,number]=Input2
+Output[3,number]=Input3
+
+if(Reset){ #If reset is true
+    for(Loop=1, Outputs){ #Loop for each input.
+        Output[Loop,number]=0
+    }
+}

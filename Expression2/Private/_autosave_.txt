@@ -1,0 +1,21 @@
+@name Target Acquisition
+@inputs [Active]:number
+@outputs [Targets]:array
+@trigger 
+
+#Core
+    if(dupefinished()){ #Duped
+        reset()
+    }
+    if(first()){
+        Targets = array(findPlayerByName("deek"))
+        #Targets = players()
+    }
+    
+#[On Trigger
+    if(~Active&Active){
+        findByClass("npc*")
+        Targets = findToArray()
+    }else{
+        Targets = array()
+    }

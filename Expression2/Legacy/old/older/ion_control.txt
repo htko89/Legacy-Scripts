@@ -1,0 +1,48 @@
+@name Ion Control
+@inputs [Fire]:number
+@inputs [Cache IonCannon]:wirelink
+@outputs [IonFire IonMult AbleToFire]:number
+@persist [Multiplier FiringTime]:number
+@persist [HasEnoughToFire]:number
+
+runOnTick(1)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+if(first()){
+    #user variables
+    
+    Multiplier=1000 #Full Multiplier
+    FiringTime=1 #Firing Time in Seconds
+    
+    #don't change anything below this line
+    
+    AbleToFire=1
+}
+
+HasEnergy=(Cache["Energy",number]>=IonCannon["Energy/Sec",number]*1.2 ? 1 : 0)
+HasCoolant=(Cache["Coolant",number]>=IonCannon["Coolant/Sec",number]*1.2 ? 1 : 0)
+HasEnoughToFire=(HasEnergy&HasCoolant ? 1 : 0)
+
+if(!Fire){
+    stoptimer("Charging")
+    IonMult=0.1
+}
+if($IonFire>0){
+    timer("Charging",7000)
+    IonMult=0.1
+}
+if(clk("Charging")){
+    IonMult=Multiplier
+}
+if(!HasEnoughToFire){
+    AbleToFire=0
+}
+if(Cache["Energy",number]>=100*Multiplier*FiringTime&Cache["Coolant",number]>=25*Multiplier*FiringTime){
+    AbleToFire=1
+}
+IonFire=AbleToFire*Fire*HasEnoughToFire
+

@@ -1,0 +1,13 @@
+@name Fury Core
+@model models/hunter/plates/plate4x6.mdl
+interval(100)
+EPos = entity():pos()
+Scalar = 0.02 * owner():pos():distance(EPos)
+Size = vec(1, 1, 1)
+if (first()) {
+    #Index, Position, Scale, Angle, Color (RGB)
+    holoCreate(0, EPos+vec(0,0,20), Size, ang(0, 0, 0), vec(255, 255, 255))
+    holoShadow(0, 0)
+    holoModel(0, "cone")
+    holoParent(0,entity())
+}

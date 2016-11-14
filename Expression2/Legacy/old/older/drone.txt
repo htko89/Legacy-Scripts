@@ -1,0 +1,76 @@
+@name Drone
+@inputs [Cache]:wirelink [Gravity]:number
+@outputs [Fire Probe]:number
+@outputs [Coolant Energy]:number
+@persist [MinCache MaxCache]:number
+@persist [Core]:entity [Drone]:gtable [TargetPos]:vector
+@trigger all
+
+runOnTick(1)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    Drone=gTable("Drone",0)
+    Core=entity():isWeldedTo()
+    Core:setMass(1000)
+    for(Loop=1,Core:hasConstraints("Weld")){
+        Core:isWeldedTo(Loop):setMass(1)
+    }
+}
+
+#Gravity Code
+if(~Gravity&Gravity){
+Core:propGravity(0)
+    for(Loop=1,Core:hasConstraints("Weld")){
+        Core:isWeldedTo(Loop):propGravity(0)
+    }
+}
+timer("Gravity",5000)
+if(clk("Gravity")){
+    Core:propGravity(0)
+    for(Loop=1,Core:hasConstraints("Weld")){
+        Core:isWeldedTo(Loop):propGravity(0)
+    } 
+}
+
+#Energy Code
+MinCache=500
+MaxCache=5000
+Energy=0, Coolant=0
+Energy=(Cache["Energy",number]<=MaxCache? 1 : 0)
+Coolant=(Cache["Energy",number]>=MinCache&Cache["Coolant",number]<=MaxCache ? 1 : 0)  
+Probe=(Cache["Energy",number]>=MaxCache? 1 : 0)
+
+#Active
+Active=Drone[1,number]
+
+#Fire Code
+if(Active){
+    Fire=Drone[2,number]
+}
+
+#Orientation Code
+if(Active){
+    TargetPos=(Drone[3,entity]:isPlayer() ? Drone[3,entity]:shootPos() : Drone[3,entity]:pos())
+    Vector=(TargetPos+$TargetPos)-Core:pos()
+    Angle=Vector:toAngle()
+    TarQ=quat(Angle)
+    CurQ=quat(Core)
+    Q = TarQ/CurQ
+    V=Core:toLocal(rotationVector(Q)+Core:pos())
+    Core:applyTorque((250*V - 35*Core:angVelVector())*Core:inertia())
+}
+
+#Movement Code
+if(Active){
+    if(Core:pos():distance(TargetPos)>2000){
+        Core:applyForce(Vector/10*Core:mass())
+    }else{
+        Core:applyForce(-Core:vel()/10*Core:mass())
+    }
+}

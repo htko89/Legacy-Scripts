@@ -1,0 +1,36 @@
+@name Follow
+@inputs 
+@outputs 
+@persist [Owner E]:entity [TarVector]:vector [TarPos]:vector
+@trigger 
+@model models/expression 2/cpu_controller_nano.mdl
+
+
+interval(10)
+
+if(dupefinished()){
+    reset()
+}
+
+if(first()){
+    Owner=owner()
+    E=entity():isWeldedTo()
+    E:setMass(10000)
+    #E:setAlpha(0)
+    E:propFreeze(0)
+}
+
+if(Owner:weapon():type()=="weapon_physgun"){
+    exit()
+}
+
+CurP=E:pos()
+TarVector=Owner:aimPos()-CurP
+TarPos=Owner:pos()-CurP
+A=Owner:eye()
+TarQ = quat(A)
+CurQ = quat(E)
+Q = TarQ/CurQ
+V = E:toLocal(rotationVector(Q)+E:pos())
+E:applyTorque((250*V - 35*E:angVelVector())*E:inertia())  
+E:applyForce((TarPos+$TarPos)*E:mass()*10)

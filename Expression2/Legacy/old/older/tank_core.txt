@@ -1,0 +1,32 @@
+@name Tank Core
+@inputs [Pod Eye Cam Ent]:wirelink
+@inputs [PodActive]:number
+@outputs [NGo Go Break SpeedMod]:number
+@persist [Core RightAxle LeftAxle]:entity
+@trigger 
+runOnTick(1)
+
+if(first()){
+    Core=Ent["Entity1",entity]
+    RightAxle=Ent["Entity2",entity]
+    LeftAxle=Ent["Entity3",entity]
+}
+
+Go=Pod["W",number]-Pod["S",number]
+NGo=-Go
+
+Forward=-Core:right()
+Right=Core:forward()
+#Up=up()
+
+Angle=Forward:toAngle():setRoll(0)+ang(0,30,0)
+TarQ=quat(Angle)
+CurQ=quat(RightAxle)
+Quat=TarQ/CurQ 
+Vec=RightAxle:toLocal(rotationVector(Quat)+RightAxle:pos()) 
+RightAxle:applyTorque((850*Vec-85*RightAxle:angVelVector())*RightAxle:inertia())
+TarQ=quat(Angle)
+CurQ=quat(LeftAxle)
+Quat=TarQ/CurQ 
+Vec=LeftAxle:toLocal(rotationVector(Quat)+LeftAxle:pos()) 
+LeftAxle:applyTorque((850*Vec-85*LeftAxle:angVelVector())*LeftAxle:inertia())

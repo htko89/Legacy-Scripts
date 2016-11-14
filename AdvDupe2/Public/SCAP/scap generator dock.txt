@@ -1,0 +1,95 @@
+[Info]
+Type:AdvDupe File
+Creator:"XrayIndia"
+Date:09/25/11
+Description:"scap generator dock by XrayIndia"
+Entities:6
+Constraints:5
+[More Information]
+FileVersion:0.84
+AdvDupeVersion:1.85
+AdvDupeToolVersion:1.9
+AdvDupeSharedVersion:1.72
+SerialiserVersion:1.4
+WireVersion:2478
+Time:02:02 PM
+Head:71
+HoldAngle:0,91.8792,0
+HoldPos:36.1141,17.7177,-42.3253
+StartPos:599.016,1281.59,-0.96875
+[Save]
+Entities:36485950{Y:28=T:364925E0;S:"Src"=N:73;Y:30=Y:51;Y:31=V:2.12,2.43,1.03;Y:32=T:3648B530;Y:34=Y:33;Y:35=V:3.99,1.79,9;Y:36=N:0.5;}H3648A9F0{N:71=T:36490120;N:73=T:3648F490;N:98=T:3648FCD0;N:72=T:3648A510;N:104=T:36488F50;N:92=T:3648F040;}3648E9B0{Y:1=A:44.9966,-90.5693,360;Y:2=V:-17.7603,-4.21252,55.4654;Y:4=B:t;}3648B2C0{S:"a"=N:255;S:"b"=N:255;S:"g"=N:255;S:"r"=N:255;}36484C00{Y:17=T:36488590;}36489A30{S:"a"=N:255;S:"r"=N:255;S:"g"=N:255;S:"b"=N:255;}3648A390{Y:29;Y:41;Y:42;}3648C310{T:36491590;T:3648A240;}36488FB0{N:0=T:3648E9B0;}3648F940{Y:28=T:3648E890;S:"Src"=N:104;Y:30=Y:41;Y:31=V:2.55,-2.55,0.73;Y:32=T:3648B2C0;Y:34=Y:33;Y:35=V:0.47,23.97,17.53;Y:36=N:0.5;}3648FA00{Y:60=N:1000;Y:61=N:5;Y:62=B:f;}3648E890{;}364862B0{N:0=T:364853E0;}3648F490{Y:5=T:36487360;Y:1=A:44.9966,-90.5699,-0.000640869;Y:2=V:-36.061,-16.7987,51.4849;Y:9=Y:10;Y:12=T:3648C2B0;Y:7=Y:13;Y:3=N:0;}3648B530{S:"a"=N:255;S:"r"=N:255;S:"g"=N:255;S:"b"=N:255;}364881A0{Y:37=T:3648D4B0;Y:63=T:3648FA00;}3648A8A0{Y:1=A:44.9966,-90.5699,359.999;Y:2=V:-36.061,-16.7987,51.4849;Y:4=B:f;}36493B40{Y:1=A:44.9966,-90.5699,359.999;Y:2=V:-17.7309,-1.27698,69.3071;Y:4=B:f;}36489220{S:"a"=N:255;S:"b"=N:255;S:"g"=N:255;S:"r"=N:255;}3648C2B0{Y:11;}3648A690{Y:28=T:3648B140;S:"Src"=N:104;Y:30=Y:29;Y:31=V:0,-2.55,0.73;Y:32=T:36489A30;Y:34=Y:33;Y:35=V:11.45,11.89,-0.47;Y:36=N:0.5;}36487360{N:0=T:3648A8A0;}364925E0{;}36491A10{Y:1=A:44.9966,-90.5699,359.999;Y:2=V:-0.00292969,-8.72986,59.9103;Y:4=B:f;}36488F50{Y:5=T:3648A120;Y:7=Y:40;Y:1=A:44.9966,-90.5699,-0.000640869;Y:44=T:36485530;Y:45=T:3648C310;Y:47=Y:46;Y:2=V:-0.00292969,-8.72986,59.9103;Y:9=Y:48;Y:50=Y:49;Y:18=T:36489010;Y:57=T:3648B0B0;Y:3=N:0;}36485530{T:3648A390;T:364916B0;}36484ED0{N:0=T:36493B40;}36489BB0{Y:38=T:364881A0;}364845D0{Y:1=A:-45.0034,-90.5689,359.999;Y:2=V:-29.8273,-24.7327,43.2606;Y:4=B:f;}36491590{S:"In";S:"Out";}364899A0{N:0=T:364845D0;}364875D0{;}3648F250{Y:38=T:36490390;}3648F040{Y:1=A:-45.0034,-90.5689,-0.000640869;Y:7=Y:58;Y:9=Y:59;Y:60=N:1000;Y:2=V:-29.8273,-24.7327,43.2606;Y:3=N:0;Y:5=T:364899A0;Y:18=T:36489BB0;Y:61=N:5;Y:62=B:f;}36492E80{Y:28=T:36488A10;S:"Src"=N:98;Y:30=Y:51;Y:31=V:-4.01,0,0.5;Y:32=T:36488200;Y:34=Y:33;Y:35=V:2.55,-0,0.73;Y:36=N:0.5;}36489010{Y:38=T:36492520;}36488EC0{Y:28=T:364875D0;S:"Src"=N:92;Y:30=S:"B";Y:31=V:0.47,23.97,17.53;Y:32=T:36489220;Y:34=Y:33;Y:35=V:2.55,-2.55,0.73;Y:36=N:0.5;}36488A10{;}36488200{S:"a"=N:255;S:"b"=N:255;S:"g"=N:255;S:"r"=N:255;}36488590{Y:16=Y:15;}3648B0B0{Y:42=N:0;Y:52=N:50;Y:41=N:50;S:"In"=N:5;S:"$In"=N:10;Y:29=N:100;S:"Out"=N:0;Y:53=N:50;Y:54=N:26708;Y:55=N:21366.4;Y:56=N:21366.4;}36490390{Y:37=T:3648D960;}36491A70{S:"In"=T:36492E80;S:"Out"=T:36488EC0;}36492520{Y:37=T:36491A70;}3648FCD0{Y:5=T:364862B0;Y:1=A:44.9966,-90.5699,-0.000640869;Y:2=V:0.133423,-17.2443,51.3988;Y:3=N:0;Y:12=T:3648A720;Y:7=Y:13;Y:9=Y:10;Y:18=T:36484C00;}3648B140{;}3648D4B0{S:"A"=T:36485950;S:"B"=T:3648F940;}36490120{Y:1=A:44.9966,-90.5693,-0.000244141;Y:2=V:-17.7603,-4.21252,55.4654;Y:3=N:0;Y:5=T:36488FB0;Y:7=Y:6;Y:9=Y:8;}364853E0{Y:1=A:44.9966,-90.5699,359.999;Y:2=V:0.133423,-17.2443,51.3988;Y:4=B:f;}3648A120{N:0=T:36491A10;}3648A240{Y:43;Y:43;}3648A510{Y:1=A:44.9966,-90.5699,-0.000640869;Y:19=B:f;Y:21=Y:20;Y:7=Y:22;Y:9=Y:23;Y:24=B:t;Y:25=B:f;Y:27=Y:26;Y:2=V:-17.7309,-1.27698,69.3071;Y:3=N:0;Y:5=T:36484ED0;Y:18=T:3648F250;Y:39=B:t;}364916B0{Y:43;Y:43;Y:43;}3648A720{Y:14;}3648D960{S:"A"=T:3648A690;}
+Constraints:364875A0{Y:64=B:t;Y:65=N:0;Y:68=T:36489580;Y:69=B:t;Y:71=Y:70;}36487750{Y:66=N:104;Y:67=N:0;}36489580{T:364905A0;T:36492C40;}H321EDD48{T:36489C70;T:364875A0;T:364918F0;T:36486220;T:3648B0E0;}36486B50{Y:66=N:71;Y:67=N:0;}3648B0E0{Y:64=B:t;Y:65=N:0;Y:68=T:364863A0;Y:69=B:t;Y:71=Y:70;}36485A10{Y:66=N:98;Y:67=N:0;}36484900{T:36490450;T:36486B50;}36490450{Y:66=N:92;Y:67=N:0;}36489C70{Y:64=B:t;Y:65=N:0;Y:68=T:3648DE40;Y:69=B:t;Y:71=Y:70;}364905A0{Y:66=N:73;Y:67=N:0;}36487A20{T:36487750;T:3648A1E0;}3648E8C0{Y:66=N:72;Y:67=N:0;}36492C40{Y:66=N:71;Y:67=N:0;}3648A1E0{Y:66=N:71;Y:67=N:0;}364918F0{Y:64=B:t;Y:65=N:0;Y:68=T:36484900;Y:69=B:t;Y:71=Y:70;}3648DE40{T:3648E8C0;T:364933C0;}36488E00{Y:66=N:71;Y:67=N:0;}364863A0{T:36485A10;T:36488E00;}36486220{Y:64=B:t;Y:65=N:0;Y:68=T:36487A20;Y:69=B:t;Y:71=Y:70;}364933C0{Y:66=N:71;Y:67=N:0;}
+[Dict]
+1:"LocalAngle"
+2:"LocalPos"
+3:"Skin"
+4:"Frozen"
+5:"PhysicsObjects"
+6:"prop_physics"
+7:"Class"
+8:"models/hunter/blocks/cube1x1x025.mdl"
+9:"Model"
+10:"models/kobilica/value.mdl"
+11:"normal:1"
+12:"value"
+13:"gmod_wire_value"
+14:"normal:5"
+15:"generation rate"
+16:"name"
+17:"WireName"
+18:"EntityMods"
+19:"Floor"
+20:"Value B"
+21:"TextB"
+22:"gmod_wire_screen"
+23:"models/hunter/plates/plate05x05.mdl"
+24:"SingleValue"
+25:"LeftAlign"
+26:"Dock [%]"
+27:"TextA"
+28:"Path"
+29:"Energypercent"
+30:"SrcId"
+31:"SrcPos"
+32:"Color"
+33:"arrowire/arrowire2"
+34:"Material"
+35:"StartPos"
+36:"Width"
+37:"Wires"
+38:"WireDupeInfo"
+39:"SingleBigFont"
+40:"gmod_wire_expression2"
+41:"Canout"
+42:"Canin"
+43:"NORMAL"
+44:"_outputs"
+45:"_inputs"
+46:"rs container v1 1 by XrayIndia"
+47:"_name"
+48:"models/beer/wiremod/gate_e2.mdl"
+49:"@name rs container v1 1 by XrayIndia€@inputs In Out€@outputs Energypercent€@outputs Canin Canout€@persist Energy E:entity€@trigger none€€#[€€Resource System Container by XrayIndia€€Terms of use:€€Do not redistribute this expression without permission.€€Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.€€€]#€€interval(100)€€if(first() |dupefinished())€{€    E=entity():isWeldedTo()€    Energy=0€    #E:setMaterial(£models/props_wasteland/lighthouse_stairs£)€}€€#calcul de la capacite en fonction du volume€Volume=round(E:volume())€Capacity=0.8*Volume€€#vitesse de tranfert pour transfert entre batteries€Transrate=50€€#signal de possibilite d'entree€if(Energy<Capacity)€{€    Canin=Transrate€}€else€{€    Canin=0€}€if(Energy>Capacity)€{€    Energy=Capacity€}€if(Energy<0)€{€    Energy=0€}€€#signal de possibilite de sortie€if(Energy>0 & ->Out)€{€    Canout=Transrate€}€else€{€    Canout=0€}€€€if(In>0&Canin)€{€    Energy+=In€}€€if(Out>0&Canout)€{€    Energy-=Out€}€€#output: pourcentage d'energie par rapport a la capacite totale€Energypercent=round(  (Energy/Capacity)*100  )€"
+50:"_original"
+51:"Value1"
+52:"$Out"
+53:"Transrate"
+54:"Volume"
+55:"Energy"
+56:"Capacity"
+57:"_vars"
+58:"gmod_wire_socket"
+59:"models/props_lab/tpplugholder_single.mdl"
+60:"WeldForce"
+61:"AttachRange"
+62:"ArrayInput"
+63:"Socket"
+64:"nocollide"
+65:"forcelimit"
+66:"Index"
+67:"Bone"
+68:"Entity"
+69:"deleteonbreak"
+70:"Weld"
+71:"Type"
+Saved:144

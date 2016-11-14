@@ -1,0 +1,226 @@
+@name sc input manager v1 4 by XrayIndia
+@inputs  Pod:wirelink Joy:wirelink
+@outputs Xout Yout Zout Pout Qout Rout Hoverout Driftout Freexout Seat:entity 
+@persist Hoverin Translation On P R X
+@trigger none
+
+#[
+
+SpaceCraft Input Manager V1.4 by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+interval(10)
+
+On=Pod["Active",number]
+
+if(first() | dupefinished())
+{
+    soundPlay(2,2,"buttons/button6.wav")
+    hint("[SCIM] SpaceCraft Input Manager 1.4 by XrayIndia.",3)
+}
+
+if(On)
+{
+    Seat=Pod["Entity",entity]
+    
+    ## Joystick
+    if(->Joy)
+    {
+        #[
+        Joystick outputs:
+        1: Ip
+        2: Iq
+        3: Ir
+        4: Ix pos
+        5: Ix neg (button)
+        6: translation
+        7: Drift
+        8: Hover
+        ]#
+        
+        Translation=Joy["6",number]
+        if(!Translation)    #No translation
+        {
+        
+            Yout=Pod["D",number]-Pod["A",number]
+            Zout=Pod["W",number]-Pod["S",number]
+        
+            Pout=Joy["1",number]^1
+            Qout=Joy["2",number]^1
+            Rout=Joy["3",number]^1
+        }
+        else    #Translation
+        {
+            Yout=-Joy["2",number]
+            Zout=-Joy["1",number]
+        
+            Pout=0
+            Qout=0
+            Rout=0
+        }
+        
+        Xout=Joy["4",number]*!Joy["5",number]-Joy["5",number]
+        
+        Hoverin=Joy["8",number]
+        Driftout=Joy["7",number]
+        Freexout=Pod["Space",number]
+
+    }
+    
+    ## Keyboard
+    elseif(!->Joy)
+    {
+        Translation=Pod["Shift",number]
+        
+        #Smoothing inputs
+        #P
+        if(Pod["W",number]&!Pod["S",number] & P<1)
+        {
+            P+=0.05
+        }
+        elseif(Pod["S",number]&!Pod["W",number] &P>-1)
+        {
+            P-=0.05
+        }
+        elseif(!Pod["S",number]&!Pod["W",number] &P>0)
+        {
+            P-=0.05
+        }
+        elseif(!Pod["S",number]&!Pod["W",number] &P<0)
+        {
+            P+=0.05
+        }
+        
+        #R
+        if(Pod["D",number]&!Pod["A",number] & R<1)
+        {
+            R+=0.05
+        }
+        elseif(Pod["A",number]&!Pod["D",number] &R>-1)
+        {
+            R-=0.05
+        }
+        elseif(!Pod["D",number]&!Pod["A",number] &R>0)
+        {
+            R-=0.05
+        }
+        elseif(!Pod["D",number]&!Pod["A",number] &R<0)
+        {
+            R+=0.05
+        }
+        
+        #X
+        if(Pod["Space",number]&!Pod["R",number] & X<1)
+        {
+            X+=0.05
+        }
+        elseif(Pod["R",number]&!Pod["Space",number]&!Pod["Shift",number] &X>-1)
+        {
+            X-=0.05
+        }
+        elseif(!Pod["R",number]&!Pod["Space",number] &X>0)
+        {
+            X-=0.05
+        }
+        elseif(!Pod["R",number]&!Pod["Space",number] &X<0)
+        {
+            X+=0.05
+        }
+        
+        if(!Translation)
+        {
+            Yout=0
+            Zout=0
+        
+            Pout=P
+            Qout=0
+            Rout=R
+
+        }
+        elseif(Translation)
+        {
+            Yout=-R
+            Zout=P
+    
+            Pout=0
+            Qout=0
+            Rout=0
+        }
+        
+        Xout=X
+        
+        Hoverin=Pod["Shift",number]&Pod["R",number]
+        
+        
+        
+        Driftout=Pod["Alt",number]
+        Freexout=0  #Maybe no Freex for KB only because too hard to fly
+    
+    
+    }
+    
+    ##Shared
+    
+    #Starting
+    if($On)
+    {
+        soundPlay(3,4,"ambient/machines/thumper_startup1.wav")
+        Seat:hintDriver("[SCIM] Activated",3)
+    }
+    
+    #Hover
+    if(Hoverin & $Hoverin)
+    {
+        Hoverout+=1
+            
+        if(Hoverout>1){Hoverout=0}
+    }
+    
+    #Translation notification
+    if(Translation&$Translation)
+    {
+        soundPlay(1,1,"buttons/button17.wav")
+        Seat:hintDriver("[SCIM] Translation",3)
+    }
+    elseif(!Translation&$Translation)
+    {
+        soundPlay(1,1,"buttons/button17.wav")
+        Seat:hintDriver("[SCIM] Rotation",3)
+    }
+        
+    
+}
+elseif(!On)
+{
+    Xout=0
+    Yout=0
+    Zout=0
+    
+    
+    Pout=0
+    Qout=0
+    Rout=0
+    
+    if($On)
+    {
+        soundPlay(4,5,"ambient/energy/power_off1.wav")
+    }
+}
+
+#[
+changelog
+
+    v1.4
+        smoothed inputs
+
+]#
+
+#SpaceCraft Input Manager v1.4 by XrayIndia.

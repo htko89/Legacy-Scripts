@@ -1,0 +1,60 @@
+@name Flight Mechanics
+#Inputs
+@inputs [Gyro]:wirelink
+@inputs [TarPos AimPos]:vector
+#Core
+@persist [Mode]:number
+@persist [C]:entity [CPos]:vector [CAng]:angle
+@persist [Xp Xn Yp Yn Zp Zn]:entity
+@persist 
+@trigger 
+if(dupefinished()){ #Duped
+    reset()
+}
+if(first()){
+    runOnTick(1)
+    C = Gyro:entity()
+    Mode = 1 # 1 = Absolute, 2 = Free flight
+}
+if(tickClk()|first()){
+    CPos = C:pos()
+    CAng = C:angles()
+}
+if(first()){
+    function entity makePts(N1:number, V1:vector){
+        local E1 = holoCreate(N1,CPos+V1*50)
+        holoModel(N1,"cone")
+        holoAlpha(N1,0)
+        holoParent(N1,C)
+        return E1
+    }
+    function vector getPos(V1:vector){
+        return CPos+V1
+    }
+    function number getAbs(V1:vector,V2:vector){
+        local AbsMult = (TarPos:distance(V1) < TarPos:distance(V2) ? 1 : -1)
+        return clamp(TarPos:distance(CPos)*AbsMult,-100,100)
+    }
+    function number getRollAbs(N1:number){
+        return (abs(CAng:pitch()) < N1 ? 0-CAng:roll() : 0)
+    }
+}
+if(first()){
+    Xp = makePts(1,C:right())
+    Xn = makePts(2,-C:right())
+    Yp = makePts(3,C:forward())
+    Yn = makePts(4,-C:forward())
+    Zp = makePts(5,C:up())
+    Zn = makePts(6,-C:up())
+    Gyro["MPH Limit",number] = 100
+}
+if(Mode == 1){
+    if(tickClk()){
+        Gyro["Lateral",number] = getAbs(Xp:pos(),Xn:pos())
+        Gyro["SpeedAbs",number] = getAbs(Yp:pos(),Yn:pos())
+        Gyro["Vertical",number] = getAbs(Zp:pos(),Zn:pos())
+        Gyro["YawLeft",number] = owner():keyUse()
+    }
+}elseif(Mode == 2){
+    #
+}

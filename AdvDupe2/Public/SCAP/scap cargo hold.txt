@@ -1,0 +1,61 @@
+[Info]
+Type:AdvDupe File
+Creator:"XrayIndia"
+Date:09/25/11
+Description:"scap cargo hold by xrayindia"
+Entities:2
+Constraints:1
+[More Information]
+FileVersion:0.84
+AdvDupeVersion:1.85
+AdvDupeToolVersion:1.9
+AdvDupeSharedVersion:1.72
+SerialiserVersion:1.4
+WireVersion:2478
+Time:02:04 PM
+Head:118
+HoldAngle:0,2.01918,0
+HoldPos:-6.07375,2.46503,-39.0582
+StartPos:1143.8,19.0563,31.0313
+[Save]
+Entities:H32E345C8{N:118=T:32E370B8;N:68=T:32E36E18;}32E36158{T:32E3C758;T:32E35918;}32E39788{;}32E40E98{N:0=T:32E43868;}32E39C68{N:0=T:32E37118;}32E35918{Y:14;Y:14;}32E39DE8{T:32E3F0F8;T:32E392A8;}32E3F0F8{Y:11;Y:12;Y:13;}32E43478{Y:13=N:50;Y:12=N:0;Y:25=N:3339;Y:11=N:0;S:"Out"=N:0;Y:26=N:50;S:"In"=N:0;Y:27=N:0;Y:28=N:2671.2;}32E43868{Y:1=A:89.9999,0.00320154,180;Y:2=V:-9.67871,0.142622,44.9893;Y:4=B:f;}32E3C758{S:"In";S:"Out";}32E3DC58{Y:22=T:32E39788;}32E3F158{Y:23=T:32E3DC58;}32E36E18{Y:5=T:32E40E98;Y:7=Y:10;Y:1=A:89.9999,0.00320154,180;Y:15=T:32E39DE8;Y:16=T:32E36158;Y:18=Y:17;Y:2=V:-9.67871,0.142622,44.9893;Y:9=Y:19;Y:21=Y:20;Y:24=T:32E3F158;Y:29=T:32E43478;Y:3=N:0;}32E370B8{Y:1=A:-1.44603e-009,90.0032,4.7667e-005;Y:2=V:2.46472,6.07388,39.0582;Y:3=N:0;Y:5=T:32E39C68;Y:7=Y:6;Y:9=Y:8;}32E37118{Y:1=A:-1.44603e-009,90.0032,4.7667e-005;Y:2=V:2.46472,6.07388,39.0582;Y:4=B:t;}32E392A8{Y:14;Y:14;Y:14;}
+Constraints:32E41C78{T:32E35648;T:32E39638;}32E39638{Y:32=N:118;Y:33=N:0;}32E37808{Y:30=B:t;Y:31=N:0;Y:34=T:32E41C78;Y:35=B:t;Y:37=Y:36;}H34199DF0{T:32E37808;}32E35648{Y:32=N:68;Y:33=N:0;}
+[Dict]
+1:"LocalAngle"
+2:"LocalPos"
+3:"Skin"
+4:"Frozen"
+5:"PhysicsObjects"
+6:"prop_physics"
+7:"Class"
+8:"models/hunter/blocks/cube025x05x025.mdl"
+9:"Model"
+10:"gmod_wire_expression2"
+11:"Energypercent"
+12:"Canout"
+13:"Canin"
+14:"NORMAL"
+15:"_outputs"
+16:"_inputs"
+17:"rs container v1 1 by XrayIndia"
+18:"_name"
+19:"models/beer/wiremod/gate_e2.mdl"
+20:"@name rs container v1 1 by XrayIndia€@inputs In Out€@outputs Energypercent€@outputs Canin Canout€@persist Energy E:entity€@trigger none€€#[€€Resource System Container by XrayIndia€€Terms of use:€€Do not redistribute this expression without permission.€€Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.€€€]#€€interval(100)€€if(first() |dupefinished())€{€    E=entity():isWeldedTo()€    Energy=0€    #E:setMaterial(£models/props_wasteland/lighthouse_stairs£)€}€€#calcul de la capacite en fonction du volume€Volume=round(E:volume())€Capacity=0.8*Volume€€#vitesse de tranfert pour transfert entre batteries€Transrate=50€€#signal de possibilite d'entree€if(Energy<Capacity)€{€    Canin=Transrate€}€else€{€    Canin=0€}€if(Energy>Capacity)€{€    Energy=Capacity€}€if(Energy<0)€{€    Energy=0€}€€#signal de possibilite de sortie€if(Energy>0 & ->Out)€{€    Canout=Transrate€}€else€{€    Canout=0€}€€€if(In>0&Canin)€{€    Energy+=In€}€€if(Out>0&Canout)€{€    Energy-=Out€}€€#output: pourcentage d'energie par rapport a la capacite totale€Energypercent=round(  (Energy/Capacity)*100  )€"
+21:"_original"
+22:"Wires"
+23:"WireDupeInfo"
+24:"EntityMods"
+25:"Volume"
+26:"Transrate"
+27:"Energy"
+28:"Capacity"
+29:"_vars"
+30:"nocollide"
+31:"forcelimit"
+32:"Index"
+33:"Bone"
+34:"Entity"
+35:"deleteonbreak"
+36:"Weld"
+37:"Type"
+Saved:20

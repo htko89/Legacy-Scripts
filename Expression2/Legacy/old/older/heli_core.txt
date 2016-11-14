@@ -1,0 +1,110 @@
+#Name
+@name Heli Core
+
+#Inputs
+@inputs [Pod Eye Ent]:wirelink
+@inputs [PodActive]:number
+@outputs [Stop]:number
+
+#Variables
+@persist [Angle AngleMult]:angle 
+@persist [Control Thrust Thruster ThrustMult Speed SpeedMult]:vector
+@persist [ThrustMultX ThrustMultY ThrustMultZ]:number
+@persist [ShipCore]:entity
+
+#Trigger
+@trigger PodActive
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    runOnTick(1)
+    #Set variables
+    ShipCore=Ent["Entity1",entity]
+    Speed=vec(10,80,10)
+    SpeedMult=vec(0.5,0.5,0.5)
+    AngleMult=ang(0.5,0.5,0.5)
+    Eye["Enable", number]=1
+}
+if(tickClk()){
+#Set Variables
+Forward=ShipCore:forward()
+Right=ShipCore:right()
+Up=ShipCore:up()
+ShipPosition=ShipCore:pos()
+
+#Set Keyboard Control
+Control=vec(Pod["D",number]-Pod["A",number],Pod["W",number]-Pod["S",number],Pod["Space",number]-Pod["Shift",number])
+}
+
+#Set Speed Control
+if(tickClk()){
+    if(Control:x()){
+        MultX=(sign(ThrustMultX)==sign(Control:x()) ? 1 : 4)
+        ThrustMultX=ThrustMult:x()+Control:x()*SpeedMult:x()*MultX
+    }else{
+        MultX=(abs(ThrustMultX)>=5 ? 4 : 1)
+        ThrustMultX=ThrustMult:x()+sign(-ThrustMult:x())*SpeedMult:x()*MultX
+    }
+    if(Control:y()){
+        MultY=(sign(ThrustMultY)==sign(Control:y()) ? 1 : 4)
+        ThrustMultY=ThrustMult:y()+Control:y()*SpeedMult:y()*MultY
+    }else{
+        MultY=(abs(ThrustMultY)>=5 ? 4 : 1)
+        ThrustMultY=ThrustMult:y()+sign(-ThrustMult:y())*SpeedMult:y()*MultY
+    }
+    if(Control:z()){
+        MultZ=(sign(ThrustMultZ)==sign(Control:z()) ? 1 : 4)
+        ThrustMultZ=ThrustMult:z()+Control:z()*SpeedMult:z()*MultZ
+    }else{
+        MultZ=(abs(ThrustMultZ)>=5 ? 4 : 1)
+        ThrustMultZ=ThrustMult:z()+sign(-ThrustMult:z())*SpeedMult:z()*MultZ
+    }
+    ThrustMult=vec(ThrustMultX,ThrustMultY,ThrustMultZ)
+    ThrustMult=clamp(ThrustMult,-Speed,Speed)
+}
+
+#Position and Angle Control
+if(tickClk()){
+    if(PodActive){
+        Thrust+=Right*ThrustMult:x()
+        Thrust+=Forward*ThrustMult:y()
+        Thrust+=Up*ThrustMult:z()
+        Angle+=ang(-Eye["Y",number]*AngleMult:pitch(),0,0)
+        Angle+=ang(0,-Eye["X",number]*AngleMult:yaw(),0)
+        Angle=angnorm(Angle):setRoll(0)
+    }else{
+        Thrust=ShipPosition
+        Angle=ShipCore:angles():setRoll(0)
+    }
+}
+
+
+#Movement
+if(tickClk()){
+    TarQ = quat(Angle)
+    CurQ = quat(ShipCore)
+    Q = TarQ/CurQ
+    V = ShipCore:toLocal(rotationVector(Q)+ShipPosition)
+    ShipCore:applyTorque((350*V - 45*ShipCore:angVelVector())*ShipCore:inertia())  
+    Thruster=Thrust-ShipPosition
+    ShipCore:applyForce((Thruster+$Thruster*10)*ShipCore:mass())
+}
+
+if(tickClk()){
+    if(PodActive){
+        Stop=0
+        ShipCore:soundPlay(1,0,"npc/attack_helicopter/aheli_rotor_loop1.wav")
+        soundPitch(1,ThrustMult:length()+100)
+    }else{
+        Stop=1
+        soundStop(1) 
+    }
+    if(~PodActive&PodActive){
+        ShipCore:soundPlay(1,1.596,"npc/attack_helicopter/aheli_charge_up.wav")
+    }
+}

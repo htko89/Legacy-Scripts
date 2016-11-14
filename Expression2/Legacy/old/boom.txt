@@ -1,0 +1,22 @@
+@name FlightMechanics
+@inputs 
+@outputs 
+@persist Boom E:entity Players:array
+@trigger 
+
+if(first()){
+    propSpawnEffect(0)
+}
+runOnTick(1)
+Boom=owner():keyUse()
+if(Boom){
+    Players=players()
+    for(I=1,Players:count()){
+        if(Players[I,entity]:name():find("Fluttershy")){
+        }else{
+            E=propSpawn("models/props_junk/gascan001a.mdl", Players[I,entity]:pos(), 1)
+            E:propNotSolid(1)
+            E:propBreak()
+        }
+    }
+}

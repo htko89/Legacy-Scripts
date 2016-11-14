@@ -1,0 +1,115 @@
+@name Turret
+@inputs [Turret]:wirelink [Targets]:array [Active]:number #Core
+@persist [Core ET]:entity [TCount]:number #Core
+@outputs [AT]:angle [VAim VTar]:vector [Dist]:number #Core
+@outputs [FLock FLos FLife FFire FSwitch]:number #Flags
+@outputs [TAcq TLock TFire]:number #Timer
+
+#Core
+    if(dupefinished()){ #Duped
+        reset()
+    }
+    if(first()){
+        runOnTick(1)
+        Core = Turret:entity() 
+    }
+
+#Variables
+    if(Active){
+        if(tickClk()){
+            VTar = (ET ? ET:boxCenterW() : vec())
+            VAim = (ET ? Core:pos()+Core:forward()*VTar:distance(Core:pos()) : Core:pos())
+            Dist = (ET ? VTar:distance(VAim) : 0)
+        }
+    }else{
+        VTar = vec(), VAim = Core:pos(), Dist = 0
+    }
+
+#Flags
+    if(Active){
+        if(tickClk()){
+            FLock = (ET&(Dist<2) ? 1 : 0)
+            FLos = 1 #check if line of sight
+            FLife = (ET:health()>0 ? 1 : 0)
+            FFire = (FLock&FLos&FLife ? 1 : 0)
+        }
+    }else{
+        FLock = 0, FLife = 0, FLos = 0, FFire = 0
+    }
+
+#Fire Control
+    #Fire on Trigger
+    if(Active){
+        if(tickClk()){
+            Turret["Fire",number] = FFire
+        }
+    }else{
+        Turret["Fire",number] = 0
+    }
+
+#Orientation - Absolute
+    #Assignment
+    if(Active){
+        if(tickClk()){
+            AT = (ET ? -heading(Core:pos(),ang(),VTar+$VTar*3) : Core:angles())
+        }
+    }else{
+        AT = Core:angles()
+    }
+    #Engine
+    if(Active){
+        if(tickClk()){
+            QT = quat(AT)
+            QC = quat(Core)
+            Q=QT/QC
+            QV=Core:toLocal(rotationVector(Q)+Core:pos())
+            Core:applyTorque((QV*300-15*Core:angVelVector())*Core:inertia())
+        }
+    }else{
+        if(tickClk()){
+            Core:applyTorque((-15*Core:angVelVector())*Core:inertia())
+        }
+    }
+    
+#Timer
+    #Time
+    if(Active){
+        if(changed(ET)&ET){
+            TAcq = curtime()
+        }
+        TLock = curtime()-TAcq
+        if(changed(FFire)&FFire){
+            TFire = TLock
+        }
+    }else{
+        TAcq = 0, TLock = 0, TFire = 0
+    }
+    #Visualization
+    if(first()){
+        holoCreate(1,Core:pos(),vec(0.2),Core:angles(),vec(255,0,0))
+        holoParent(1,Core)
+        holoModel(1,"icosphere")
+    }
+    if(Active){
+        if(tickClk()){
+            holoPos(1,VAim)
+        }
+    }
+
+#ET = 1. If multiple, switch on death / TO. if none, then return 0
+    if(Active){
+        if(tickClk()){
+            TCount = Targets:count()
+            if(TCount==1){
+                ET = Targets[1,entity]
+            }elseif(TCount>1){
+                if(TLock > 0.5){
+                    ET = Targets[randint(TCount),entity]
+                }elseif(changed(FLife)&!FLife){
+                    ET = Targets[randint(TCount),entity]
+                }
+            }else{
+                ET = noentity()
+            }
+        }
+    }

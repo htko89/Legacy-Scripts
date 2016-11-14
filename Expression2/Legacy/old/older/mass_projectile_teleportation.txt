@@ -1,0 +1,82 @@
+@name Mass Projectile Teleportation
+@inputs [Target]:entity 
+@outputs [OX1 OY1 OZ1]:number
+@outputs [OX2 OY2 OZ2]:number
+@outputs [OX3 OY3 OZ3]:number
+@outputs [OX4 OY4 OZ4]:number
+@outputs [OX5 OY5 OZ5]:number
+@outputs [OX6 OY6 OZ6]:number
+@outputs [OX7 OY7 OZ7]:number
+@outputs [OX8 OY8 OZ8]:number
+@outputs [DX DY DZ Everything Send Find]:number
+@persist [Time TimePreset Radius]:number [Found Orig]:array
+@persist [Core]:entity [Dest]:vector
+@trigger none
+
+runOnTick(1)
+
+if(first()){
+    findClearBlackList()
+    findClearWhiteList()
+    Core=entity():isWeldedTo()
+    findIncludeClass("prop_combine_ball")
+    findIncludeClass("rpg_missile")
+    findIncludeClass("dexgun_pulse")
+    findIncludeClass("rocketpod_rocket")
+    findIncludeClass("drone")
+    findExcludeClass("drone_launcher")
+    findIncludeClass("staff_pulse")
+    findIncludeClass("asgardbolt")
+    findIncludeClass("antimatter_bolt")
+    findIncludeClass("autocannon_shell")
+    findIncludeClass("laser_blaster_bolt")
+    findIncludeClass("plasma_blaster_bolt")
+    #findIncludeClass("singularity")
+    #findIncludeClass("phaser_beam")
+    Everything=1
+    TimePreset=1000
+    Radius=10000
+    Time=(findUpdateRate()>=TimePreset ? findUpdateRate() : TimePreset)
+    timer("Interval",Time)
+}
+if(clk("Interval")){
+    Time=(findUpdateRate()>=TimePreset ? findUpdateRate() : TimePreset)
+    timer("Interval",Time)
+    if(findCanQuery()){
+        Find=findInSphere(Core:pos(),Radius)
+        Found=findToArray()
+        findExcludeEntities(Found) 
+        if(Found:count()>8){
+            for(Loop=1, Found:count()-8){
+                Found:pop()
+            } Loop=0
+        }
+        Send=1
+        timer("Send",Time-50)
+        timer("Clear",10000)
+    }
+}
+if(clk("Send")){
+    Send=0
+}
+if(clk("Clear")){
+    findClearBlackList()
+    findClearWhiteList()
+}
+for(Loop=1, Found:count()){
+    Orig[Loop,vector]=Found[Loop,entity]:pos() 
+}    
+if(Found[1,entity]){OX1=Orig[1,vector]:x(),OY1=Orig[1,vector]:y(),OZ1=Orig[1,vector]:z()}else{OX1=0, OY1=0, OZ1=0}
+if(Found[2,entity]){OX2=Orig[2,vector]:x(),OY2=Orig[2,vector]:y(),OZ2=Orig[2,vector]:z()}else{OX2=0, OY2=0, OZ2=0}
+if(Found[3,entity]){OX3=Orig[3,vector]:x(),OY3=Orig[3,vector]:y(),OZ3=Orig[3,vector]:z()}else{OX3=0, OY3=0, OZ3=0}
+if(Found[4,entity]){OX4=Orig[4,vector]:x(),OY4=Orig[4,vector]:y(),OZ4=Orig[4,vector]:z()}else{OX4=0, OY4=0, OZ4=0}
+if(Found[5,entity]){OX5=Orig[5,vector]:x(),OY5=Orig[5,vector]:y(),OZ5=Orig[5,vector]:z()}else{OX5=0, OY5=0, OZ5=0}
+if(Found[6,entity]){OX6=Orig[6,vector]:x(),OY6=Orig[6,vector]:y(),OZ6=Orig[6,vector]:z()}else{OX6=0, OY6=0, OZ6=0}
+if(Found[7,entity]){OX7=Orig[7,vector]:x(),OY7=Orig[7,vector]:y(),OZ7=Orig[7,vector]:z()}else{OX7=0, OY7=0, OZ7=0}
+if(Found[8,entity]){OX8=Orig[8,vector]:x(),OY8=Orig[8,vector]:y(),OZ8=Orig[8,vector]:z()}else{OX8=0, OY8=0, OZ8=0}
+Dest=Target:pos()
+if(Target){
+    DX=Dest:x(), DY=Dest:y(), DZ=Dest:z()
+}else{
+    DX=0, DY=0, DZ=0
+}

@@ -1,0 +1,30 @@
+@name Anti Vuvuzela 2
+@inputs [Active]:number
+@outputs [Entity]:entity [Name]:string
+@persist Players:array Bomb:entity
+@trigger 
+
+runOnTick(1)
+
+timer("Interval",1000)
+if(clk("Interval")){
+    Players=players()
+    for(Loop=1,Players:count()){
+        if(Players[Loop,entity]:weapon():type():find("vuvuzela")){
+            Entity=Players[Loop,entity]
+        }
+    }
+    Name="Vuvuzela Fag\n(Horn Fag):\n"+(Entity ? Entity:name() : "Nobody")
+    Entity=(!Entity:weapon():type():find("vuvuzela") ? noentity() : Entity)
+    
+}
+timer("interval",1000)
+if(clk("interval")){
+    if(Entity&Active){
+        for(Loop=1,5){
+            Bomb=propSpawn("models/props_c17/oildrum001_explosive.mdl", Entity:pos(), 0)
+            Bomb:propBreak()
+        } Loop=0
+    }
+}
+    

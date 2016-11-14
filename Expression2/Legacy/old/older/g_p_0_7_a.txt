@@ -1,0 +1,132 @@
+@name Disc Core
+#In
+@inputs [Pod Eye Cam Ent]:wirelink
+@inputs [Probe]:wirelink
+#Out
+@outputs #Debug:vector
+@outputs [Thruster]:number [Power]:number
+@outputs [Fire Multi]:number
+#Self Aware
+@persist [ShipCore ChipCore]:entity
+@persist [Forward, Right, Up]:vector
+@persist [Active ThirdPerson]:number
+#Physical
+@persist [Angle AngleMult]:angle 
+@persist [Thrust ThrustMult]:vector
+@persist [StopMult]:vector
+#Trigger
+@trigger none
+runOnTick(1)
+
+#Debug=vec(opcounter(),minquota(),maxquota())
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    #Set variables
+    ShipCore=Ent["Entity1",entity]
+    ChipCore=entity()
+    AngleMult=ang(0.4,0.4,0.4)
+    ThrustMult=vec(30,50,20)
+    StopMult=vec(0.1,0.1,0.1)
+    Power=0
+    #Set Mass 1
+    Ent["Entity1",entity]:setMass(10000) #ShipCore
+    #Set Mass 2
+    #[for(Loop=1,ShipCore:hasConstraints("Weld")){
+        ShipCore:isWeldedTo(Loop):setMass(100)
+    }]#
+    #Set Text
+    Text1["String",string]="1    X    I    N    F    U    S    I    O    N"
+    Text1["FGColor",vector]=vec(255,255,255)
+    Text1["BGColor",vector]=vec(20,20,20)
+    Text2["String",string]="G    P    0    7    A"
+    Text2["FGColor",vector]=vec(255,255,255)
+    Text2["BGColor",vector]=vec(20,20,20)
+}
+
+#Set Variables
+Active=Pod["Active", number]
+if(Active){
+ThirdPerson=Pod["ThirdPerson",number]
+Weapon1A["Fire",number]=Pod["Mouse1",number]
+Weapon1B["Fire",number]=Pod["Mouse1",number]
+Fire=Pod["Mouse2",number]
+if(Pod["Mouse1",number]){
+    Multi=1
+}else{Multi=100}
+}
+Power=Active
+Forward=ShipCore:forward()
+Right=ShipCore:right()
+Up=ShipCore:up()
+if(Active){
+    Eye["Enable", number]=1
+    Cam["Activated", number]=1
+    Thruster=1
+}else{
+    Eye["Enable", number]=0
+    Cam["Activated", number]=0
+    Thruster=0
+}
+    
+#Prep Physical
+if(Active){
+    Thrust=vec(0,0,0)
+    Thrust+=vec((Pod["D",number]-Pod["A",number]),0,0)
+    Thrust+=vec(0,(Pod["W",number]-Pod["S",number]),0)
+    Thrust+=vec(0,0,(Pod["Space",number]-Pod["Shift",number]))
+    Angle+=ang(0,0,-(Pod["TurnRightKey",number]-Pod["TurnLeftKey",number])*AngleMult:roll())
+    Angle+=ang(0,-Eye["X",number]*AngleMult:yaw(),0)
+    Angle+=ang(-Eye["Y",number]*AngleMult:pitch(),0,0)
+    Angle=angnorm(Angle)
+}else{
+    Thrust=vec(0,0,0)
+    Angle=ShipCore:forward():toAngle()
+}
+
+#Set Physical
+if(Active){        
+    TarQ=quat(Angle)
+    CurQ=quat(ShipCore)
+    Quat=TarQ/CurQ 
+    Vec=ShipCore:toLocal(rotationVector(Quat)+ShipCore:pos()) 
+    ShipCore:applyTorque((200*Vec-100*ShipCore:angVelVector())*ShipCore:inertia())
+    if(Thrust){
+        ShipCore:applyForce(Right*Thrust:x()*ThrustMult:x()*ShipCore:mass())
+        ShipCore:applyForce(Forward*Thrust:y()*ThrustMult:y()*ShipCore:mass())
+        ShipCore:applyForce(Up*Thrust:z()*ThrustMult:z()*ShipCore:mass())
+    }
+    ShipCore:applyAngForce(Pod["Alt",number]*-ShipCore:angVel()*ang(StopMult)*ShipCore:mass())
+    ShipCore:applyForce(Pod["Alt",number]*-ShipCore:vel()*StopMult*ShipCore:mass())
+#    if(Probe["Gravity",number]){
+#        ShipCore:applyForce(vec(0,0,-1)*(ShipCore:mass())*(-Probe["Gravity",number]*6)/66.57)
+#    }
+    ShipCore:applyForce(Pod["Alt",number]*-ShipCore:vel()/50*StopMult*ShipCore:mass())
+}
+
+
+#Set Visual
+if($ThirdPerson!=0){
+    if(ThirdPerson){
+        Cam["Parent",entity]=ShipCore
+        Cam["Position",vector]=ShipCore:pos()-Forward*1800+Up*1000
+        Cam["Direction",vector]=+Forward*6-Up*2
+    }else{
+        Cam["Parent",entity]=ShipCore
+        Cam["Position",vector]=ShipCore:pos()-Forward*1800+Up*1000
+        Cam["Direction",vector]=+Forward*6-Up*2
+    }
+}
+if($Active>0){
+    Pod["Entity",entity]:hintDriver("Ship is controlled by keyboard and mouse",5)
+    Pod["Entity",entity]:hintDriver("Controls:",5)
+    Pod["Entity",entity]:hintDriver("Ctrl=Change Camera, E=Exit",5)
+    Pod["Entity",entity]:hintDriver("WASD=Move, Space&Shift=Up&Down, Alt=Brake",5)
+    Pod["Entity",entity]:hintDriver("Move Mouse to aim",5) 
+    Pod["Entity",entity]:hintDriver("Mouse1&2=Primary&Secondary Weapons",5) 
+}

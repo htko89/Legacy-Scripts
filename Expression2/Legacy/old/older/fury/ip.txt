@@ -1,0 +1,27 @@
+ip list
+
+1x desktops
+	11 jenny BT VNC
+	12 andy BT VNC
+	13 kevin BT VNC
+2x Laptop
+	21 Tony laptop BT VNC
+	22 Jenny Laptop BT VNC
+3x devices
+	31 iTalkBB PORTS OPEN
+	32 epson printer no ports
+	33 rental router no ports
+4x mobile
+	41 milestone no ports
+
+
+ports list
+
+39xx	Skype (software) BOTH
+49xx	BT (software) TCP
+48xx	BT (Web) TCP
+59xx	VNC (software) TCP
+58xx	VNC (Web) TCP
+6910	Remote access
+
+5060/6802/16384-16482 italkBB BOTH

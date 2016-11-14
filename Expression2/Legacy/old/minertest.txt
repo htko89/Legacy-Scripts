@@ -1,0 +1,50 @@
+@name Minertest
+@inputs [Active Switch Start]:number [GPS1 GPS2]:vector
+@inputs [Gyro]:wirelink
+@persist [GPS POS]:vector [ShipCore GyroCore]:entity
+@persist [Test]:number
+@trigger 
+@model models/Slyfo/interior_footlockerlid.mdl
+
+GyroCore=Gyro:entity()
+POS=GyroCore:pos()
+ShipCore=entity():isWeldedTo()
+if(first()){
+    ShipCore:setMass(10000) #ShipCore
+    ShipCore:propGravity(0)
+    for(Loop=1,ShipCore:hasConstraints("Weld")){
+        ShipCore:isWeldedTo(Loop):setMass(100)
+        ShipCore:isWeldedTo(Loop):propGravity(0)
+    }
+    runOnTick(1)
+    function number getAbs(A:vector,T:vector,D){
+        V1=(-A*D)+POS
+        V2=(A*D)+POS
+        return (T:distance(V1)-T:distance(V2))/(D*2)
+    }
+    Gyro["ThrustMult",number]=1
+    Gyro["RollMult",number]=0.01
+    Gyro["MPH Limit",number]=toUnit("mph",10000)
+}
+
+GPS=(Switch ? GPS1 : GPS2)
+GPS=GPS+vec(0,0,500)
+Gyro["Activate",number]=Active
+Gyro["AimMode",number]=Active
+Gyro["AimVec",vector]=vec(0,10000,500)
+if(Start){
+    Test=getAbs(GyroCore:forward(),GPS,1000)
+    SpeedAbs=round(Test+$Test*20,2)
+    Lateral=round(getAbs(GyroCore:right(),GPS,1000),2)
+    Vertical=round(getAbs(GyroCore:up(),GPS,1000),2)
+    RollAbs=round((0-Gyro["Angles",angle]:roll()),2)
+}else{
+    SpeedAbs=0
+    Lateral=0
+    Vertical=0
+    Roll=0
+}
+Gyro["Vertical",number]=Vertical
+Gyro["Lateral",number]=Lateral
+Gyro["SpeedAbs",number]=SpeedAbs
+Gyro["RollAbs",number]=RollAbs

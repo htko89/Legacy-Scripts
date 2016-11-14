@@ -1,0 +1,107 @@
+@name Base
+@inputs [Pod Eye Cam Ent EGP]:wirelink
+#Var
+@persist [Core]:entity [IceClass]:string [BaseOffset BaseSpace BaseEntry BaseCode]:number
+#gTable Data
+@persist [System]:gtable
+@persist [Info]:table [BaseList BaseStat MinerList IceList IceStat]:array
+#E2 Data
+@trigger none
+
+#Dupe
+if(dupefinished()){
+    reset()
+}
+
+#Init
+if(first()){
+    #Set Var
+    Core=Ent["Entity1",entity]
+    IceClass="Player"
+    BaseOffset=500
+    BaseSpace=500
+    BaseEntry=-1
+    interval(1000)
+    runOnLast(1)
+    #Init Data Signal
+    dsJoinGroup("Base") 
+    dsSetScope(1)
+    #Init gTable
+    gRemoveAll()
+    System=gTable("System",0)
+    System["Info",table]=table()
+    System["BaseList",array]=array()
+    System["BaseStat",array]=array()
+    System["MinerList",array]=array()
+    System["IceList",array]=array()
+    System["IceStat",array]=array()
+    #Get Data
+    Info=System["Info",table]
+    print("Station: ",curtime()," ",Info:id())
+    BaseList=System["BaseList",array]
+    BaseStat=System["BaseStat",array]
+    MinerList=System["MinerList",array]
+    IceList=System["IceList",array]
+    IceStat=System["IceStat",array]
+    #Init Data
+    Info["Core",entity]=Core
+    #Create Functions
+    function void updateIce(){
+        findClearBlackList()
+        findExcludeEntities(IceStat)
+        findByClass(IceClass)
+        IceList=findToArray()
+    }
+    function void updateBase(){
+        N1=BaseList:count()
+        N2=MinerList:count()
+        print("Station: ",curtime()," Miners: ",N2)
+        V1=Core:pos()
+        V2=Core:forward()
+        V3=Core:right()
+        for(Loop=1,N1){
+            BaseList:remove(Loop)
+        } Loop=0
+        holoDeleteAll()
+        for(Loop=1,N2+4){
+            BaseList[Loop,entity]=holoCreate(Loop)
+            holoAlpha(Loop,255)
+            holoModel(Loop,"tetra")
+            holoParent(Loop,Core)
+        } Loop=0
+        holoPos(1,V1+V2*BaseOffset+V3*BaseSpace*BaseEntry)
+        holoAng(1,(V3*BaseEntry):toAngle())
+        holoPos(2,V1+V2*BaseOffset)
+        holoAng(2,V2:toAngle())
+        holoPos(3,V1)
+        holoAng(3,V2:toAngle())
+        holoPos(4,V1-V2*BaseOffset)
+        holoAng(4,(V3*-BaseEntry):toAngle())
+        for(Loop=1,N2){
+            holoPos(Loop,V1-V2*BaseOffset+V3*BaseSpace*BaseEntry*Loop)
+            holoAng(Loop,(V3*-BaseEntry):toAngle())
+        } Loop=0
+    }
+}
+
+#update Ice
+if(clk()|dsClk("Event")){
+    updateIce()
+}
+
+#Update Base
+if(dsClk("Event")){
+    updateBase()
+    print("test")
+}
+
+#First
+if(first()){
+    updateIce()
+    updateBase()
+    dsSend("Reset","Miner",0)
+}
+
+#Last
+if(last()){
+}

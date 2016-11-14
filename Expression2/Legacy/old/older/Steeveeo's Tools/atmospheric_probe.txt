@@ -1,0 +1,112 @@
+# Author: Steeveeo
+# Updated: May 2, 2010 @ 5:37 AM PST (-8 GMT)
+
+# Use and Purpose:
+# This chip can be placed anywhere and will output and display
+# the current atmospheric stats.
+
+# Fair Use and Legality:
+# This chip is provided as is and is designed to work only
+# as instructed. This is provided under Creative Commons and
+# may be modified and/or shared with anyone as long as proper
+# credit is given to the original author (Steeveeo). Failure to
+# give credit by plagiarising or removing this header is subject
+# to administrative punishment.
+@name Atmospheric Probe
+@inputs 
+@outputs Name:string Size:string Gravity Temperature O2Percent O2Volume CO2Percent CO2Volume NitroPercent NitroVolume HydroPercent HydroVolume Vacuum Volume UnUsedVolume
+@persist OverlayText:string
+@trigger 
+
+interval(5000)
+
+#Startup
+if(first())
+{   
+    OverlayText = ""
+    timer("Startup",500)
+}
+
+#Problems with duping, reset chip
+if(duped())
+{
+    reset()
+}
+
+#Compile Atmosphere Data
+if(clk()|clk("Startup"))
+{
+    soundStop("Active")
+    #Ping if in a viable atmosphere
+    if(Name & Name != "Space")
+    {
+        soundPlay("Active", 0.5, "RD/pump/beep-3.wav",0.75) #Accidental Sonar effect FTW!
+    }
+    #Else Warn
+    else
+    {
+        soundPlay("Active", 0.5, "buttons/blip2.wav")
+    }
+    
+    #Check if real atmo or climate reg.
+    if(entity():lsName() == "No Name")
+    {
+        Name = "Regulated Climate"
+    }
+    else
+    {
+        Name = entity():lsName()
+    }
+    #If an atmosphere is detected, read it (and don't redbrick in space).
+    if(Name & Name != "Space")
+    {
+        Size = entity():lsSize():toString() + " units"
+        Temperature = entity():lsTemperature()
+        Gravity = entity():lsGravity()
+        O2Percent = entity():lsO2Percent()
+        O2Volume = entity():lsO2Amount()
+        CO2Percent = entity():lsCO2Percent()
+        CO2Volume = entity():lsCO2Amount()
+        NitroPercent = entity():lsNPercent()
+        NitroVolume = entity():lsNAmount()
+        HydroPercent = entity():lsHPercent()
+        HydroVolume = entity():lsHAmount()
+        Vacuum = entity():lsEmptyAirPercent()
+        Volume = entity():lsVolume()
+        UnUsedVolume = entity():lsEmptyAirAmount()
+    }
+    else
+    {
+        Size = "Undetectable"
+        Temperature = entity():lsTemperature()
+        Gravity = 0
+        O2Percent = 0
+        O2Volume = 0
+        CO2Percent = 0
+        CO2Volume = 0
+        NitroPercent = 0
+        NitroVolume = 0
+        HydroPercent = 0
+        HydroVolume = 0
+        Vacuum = 100
+        UnUsedVolume = 0
+    }
+    #Overlay Text (Tooltip)
+    OverlayText = "- " + Name + " -\n"
+    OverlayText += "Size: " + Size + "\n"
+    OverlayText += "Temperature: " + round(Temperature*100)/100 + "K\n"
+    OverlayText += "Gravity: " + round(Gravity*100)/100 + "\n"
+    OverlayText += "Oxygen: " + round(O2Percent*100)/100 + "% (" + round(O2Volume) + ")\n"
+    OverlayText += "Carbon Dioxide: " + round(CO2Percent*100)/100 + "% (" + round(CO2Volume) + ")\n"
+    OverlayText += "Nitrogen: " + round(NitroPercent*100)/100 + "% (" + round(NitroVolume) + ")\n"
+    OverlayText += "Hydrogen: " + round(HydroPercent*100)/100 + "% (" + round(HydroVolume) + ")\n"
+    OverlayText += "Vacuum: " + round(Vacuum*100)/100 + "% (" + round(UnUsedVolume) + ")"
+    setName(OverlayText)
+}
+
+#if(first()|clk("Overlay"))
+#{
+#    #Set Tooltip
+#    entity():setOverlayText(OverlayText)
+#    timer("Overlay",10)
+#}

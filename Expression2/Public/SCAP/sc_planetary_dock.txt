@@ -1,0 +1,94 @@
+@name sc planetary dock by XrayIndia
+@inputs Socket:entity Plugged
+@outputs Gravity:vector
+@persist Distance Base:entity
+@trigger none
+
+#[
+
+SpaceCraft Planetary Dock by XrayIndia
+
+Terms of use:
+
+Do not redistribute this expression without permission.
+
+Credits are to be given whenever this expression is featured in a save, dupe or media of any kind.
+
+
+]#
+
+interval(10)
+
+#Parameters
+Tp=800
+Rp=1000
+
+Range=200
+Minvel=3
+
+#Initialisation
+if(first() | dupefinished())
+{
+    Base=entity():isWeldedTo()
+    #Base=entity()
+}
+
+Socket:setMass(500)
+
+#Gravity management
+if(propGravity():z()==-600)
+{
+    Gravity=vec(0,0,Socket:mass()*9.0135)
+}
+else
+{
+    Gravity=vec(0,0,0)
+}
+
+
+#Finding Spacecraft
+findByClass("gmod_wire_plug")
+Scplug=findClosest(Base:pos())
+Scvel=Scplug:isWeldedTo():vel():length()
+
+#Socket datas
+Vpitch=Socket:angVel():pitch()
+Vyaw=Socket:angVel():yaw()
+Vroll=Socket:angVel():roll()
+
+V=Socket:vel()
+
+#Distance from base to Spacecraft used to know if a spacecraft is in docking range
+Scdistance=(Scplug:pos()-Base:pos()):length()
+
+#Connecting
+if((Scvel<Minvel)&(Scdistance<Range)& !Plugged)
+{
+    Targetpos=Scplug:massCenter()
+    
+    D=Targetpos-Socket:massCenter()
+    It=clamp(Distance/100,0,1)
+    Distance=D:length()
+    
+    Socket:applyForce(Tp*(70*(D/Distance)*It-V)+Gravity)
+}
+
+#Connected
+if(Plugged)
+{
+    Socket:applyForce(vec(0,0,0)+Gravity)
+}
+
+#Idle
+if((Scvel>Minvel)|(Scdistance>Range)&!Plugged)
+{
+    Targetpos=Base:pos()+vec(60,0,5)
+
+    D=Targetpos-Socket:massCenter()
+    It=clamp(Distance/100,0,1)
+    Distance=D:length()
+    Socket:applyForce(Tp*(70*(D/Distance)*It-V)+Gravity)
+
+}
+
+Socket:applyAngForce(Rp*-Socket:angles()-200*Socket:angVel())

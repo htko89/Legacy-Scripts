@@ -1,0 +1,43 @@
+@name PlayX Spam
+@inputs Start:number
+@outputs [Core Find]:entity [Alpha]:number
+@trigger 
+
+runOnTick(1)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+if(first()){
+    Core=entity():isWeldedTo()
+    findExcludeEntity(Core)
+    Core:propFreeze(1)
+    for(Loop=1,Core:hasConstraints("Weld")){
+        Core:isWeldedTo(Loop):propFreeze(1)
+    } Loop=0
+}
+    
+if(Start){
+    timer("Delay",findUpdateRate()+100)
+}
+
+if(clk("Delay")){
+    if(findCanQuery()){
+        findByModel(Core:model())
+        Find=find()
+    }
+}
+
+if(Start){
+    if(Find){
+        Alpha=(Alpha ? 0 : 1)
+        Core:setPos(Find:pos()+Find:forward())
+        Core:setAng(Find:angles())
+        Core:propFreeze(1)
+    }
+}else{
+    Alpha=0
+}
+Core:setAlpha(Alpha*255)

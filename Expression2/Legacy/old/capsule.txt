@@ -1,0 +1,133 @@
+@name Capsule
+@inputs [PodActive Shift Light R Grabbed]:number [Pod Eye Cam Ent]:wirelink
+@outputs [GyroActive Level Freeze Hold Grab Thrust AimThrust]:number
+@outputs [SpeedAbs Lateral Vertical]:number
+@outputs [PitchAbs YawAbs RollAbs]:number
+@outputs [PitchMult YawMult RollMult ThrustMult MPHLimit]:number
+@persist [Core AimCore]:entity [Mode FixGyro]:number
+@persist [AimPos TVec QVec]:vector [AimAngle]:angle
+@persist [TarQ CurQ]:quaternion
+@trigger
+@model models/Slyfo/interior_footlockerlid.mdl
+
+runOnTick(1)
+
+if(dupefinished()){ #Duped
+    reset()
+}
+if(tickClk()){
+    CurQ = quat(AimCore)
+}
+if(first()){
+    Core       = Ent["Entity1",entity]
+    AimCore    = Ent["Entity2",entity]
+    Freeze     = 1
+    PitchMult  = 0.1
+    YawMult    = 0.1
+    RollMult   = 0.05
+    ThrustMult = 2
+    MPHLimit   = 0
+    Mode       = 1
+    Grab       = 0
+    Hold       = 1
+    Cam["Angle",angle]     = Core:angles()
+    Cam["Position",vector] = Core:pos()-Core:forward()*400+Core:up()*200
+    Cam["Parent",entity]   = Core
+    AimPos     = AimCore:pos()
+    TarQ       = CurQ
+}
+if(FixGyro){
+    FixGyro++
+    if(FixGyro == 2){
+        GyroActive = 1
+    }elseif(FixGyro == 3){
+        Hold       = 1
+        FixGyro    = 0
+    }
+}
+if(~PodActive){
+    Freeze     = (PodActive? 0 : 1)
+    Mode       = 1
+    if(PodActive){
+        if(Hold){
+            Hold           = 0
+            GyroActive     = 0
+            FixGyro        = 1
+        }else{
+            GyroActive     = 1
+        }
+    }else{
+        GyroActive = 0
+    }
+    Cam["Angle",angle]         = Core:angles()
+    Cam["Position",vector]     = Core:pos()-Core:forward()*400+Core:up()*200
+    Cam["Parent",entity]       = Core
+    Cam["Activated",number]    = PodActive
+    Eye["Enable",number]       = PodActive
+}
+if(~Shift&Shift){
+    Mode       = (Mode? 0 : 1)
+    TarQ       = CurQ
+    if(Mode == 1){
+        Cam["Angle",angle]     = Core:angles()
+        Cam["Position",vector] = Core:pos()-Core:forward()*400+Core:up()*200
+        Cam["Parent",entity]   = Core
+    }
+    if(Mode == 0){
+        Cam["Angle",angle]     = AimCore:angles()
+        Cam["Position",vector] = AimCore:pos()-AimCore:forward()*30+AimCore:up()*20
+        Cam["Parent",entity]   = AimCore
+    }
+}
+if(~R&R){
+    Grab       = (Grab ? 0 : 1)
+}
+if(~Light&Light){
+    Hold       = (Hold ? 0 : 1)
+    AimPos     = AimCore:pos()
+    TarQ       = CurQ
+}
+if(~Grabbed){
+    AimPos     = AimCore:pos()
+    TarQ       = CurQ
+}
+Control        = vec(Pod["D",number]-Pod["A",number],Pod["W",number]-Pod["S",number],Pod["Space",number]-Pod["Alt",number])
+if(Mode == 1){
+    if(tickClk()){
+        Level      = Pod["Light",number]
+        Angles     = Core:angles()
+        SpeedAbs   = Control:y()
+        Lateral    = Control:x()
+        Vertical   = Control:z()
+        PitchAbs   = -Eye["Y",number]
+        YawAbs     = -Eye["X",number]
+        RollAbs    = (abs(Angles:pitch()) < 80 ? 0-Angles:roll()-YawAbs*2 : 0)
+        Thrust     = Pod["W",number]
+    }
+}elseif(Mode == 0){
+    if(tickClk()){
+        Angles     = AimCore:angles()
+        Pitch      = Eye["Y",number]*PitchMult*2
+        Yaw        = -Eye["X",number]*YawMult*2
+        Roll       = (abs(Angles:pitch()) < 80 ? 0-Angles:roll()*RollMult-Yaw : 0)
+        AimPos     = AimPos+Control:y()*AimCore:forward()*6
+        AimPos     = AimPos+Control:x()*AimCore:right()*6
+        AimPos     = AimPos+Control:z()*AimCore:up()*6
+        AimThrust  = Pod["W",number]
+    }
+}
+if(tickClk()){
+    if(Mode == 0){
+        PitchQuat  = qRotation(TarQ:right(),Pitch)
+        YawQuat    = qRotation(TarQ:up(),Yaw)
+        RollQuat   = qRotation(TarQ:forward(),Roll)
+        TarQ       = (PitchQuat*YawQuat*RollQuat)*TarQ
+    }
+    if(!Hold){
+        Q          = TarQ/CurQ
+        QVec       = AimCore:toLocal(rotationVector(Q)+AimCore:pos())
+        AimCore:applyTorque((250*QVec - 35*AimCore:angVelVector())*AimCore:inertia())
+        TVec       = AimPos-AimCore:pos()
+        AimCore:applyForce((10*TVec+$TVec*20)*AimCore:mass())
+    }
+}

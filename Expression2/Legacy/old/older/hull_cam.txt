@@ -1,0 +1,33 @@
+@name Hull Cam
+@inputs [Elevation Bearing PodActive Zoom]:number [Pod Cam]:wirelink
+@outputs 
+@persist [CamMode]:number ShipCore:entity
+@trigger PodActive Zoom
+runOnTick(1)
+
+if(first()){
+    CamMode=1
+    ShipCore=Pod["Entity",entity]
+    Cam["Parent",entity]=ShipCore
+}
+
+Cam["Direction",vector]=ang(-Elevation,Bearing,0):forward()
+    
+if(~PodActive&PodActive){
+    Cam["Activated",number]=1
+}
+if(!PodActive){
+    Cam["Activated",number]=0
+}
+if(~Zoom&Zoom){
+    if(CamMode){
+        CamMode=0
+    }else{
+        CamMode=1
+    }
+}
+if(CamMode){
+    Cam["Position",vector]=ShipCore:pos()+ShipCore:right()*-1000+ShipCore:up()*100
+}else{
+    Cam["Position",vector]=ShipCore:pos()+ShipCore:right()*+1000+ShipCore:up()*100
+}
