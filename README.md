@@ -7,7 +7,6 @@ parent: "personal"
 topics:
   - "code"
 tools:
-  - "personal"
   - "expression2"
   - "advdupe2"
 link: "https://github.com/htko89/scripts-legacy"
