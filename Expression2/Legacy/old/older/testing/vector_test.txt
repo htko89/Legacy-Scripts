@@ -1,6 +1,0 @@
-@name vector test
-@inputs GPS:wirelink
-@outputs GPSString:string
-interval(20)
-GPSString = GPS["Vector", vector]:toString()
-

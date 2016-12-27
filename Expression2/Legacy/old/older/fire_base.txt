@@ -1,8 +1,0 @@
-@name Fire Base
-@outputs [Open]:number
-@persist 
-@trigger 
-
-runOnTick(1)
-
-Open=(entity():pos():distance(owner():pos())<=120 ? 1 : 0)

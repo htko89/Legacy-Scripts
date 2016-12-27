@@ -1,8 +1,0 @@
-@name One
-@inputs Two:wirelink
-@outputs Output:number
-@persist 
-@trigger 
-runOnTick(1)
-
-Output=Two["Value1",number]

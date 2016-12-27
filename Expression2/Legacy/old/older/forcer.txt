@@ -1,7 +1,0 @@
-@name Forcer
-@inputs In
-@outputs Out
-@persist 
-@trigger 
-
-Out=In*10000

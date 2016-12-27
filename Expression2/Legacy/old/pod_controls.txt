@@ -1,9 +1,0 @@
-@name Pod Controls
-@inputs [W A S D Shift Space M1 M2 WheelU WheelD R F]:number
-@outputs [Controls]:vector [Mouse]:vector2 [RF]:number
-@persist 
-@trigger all
-
-Controls = vec(D-A,W-S,Space-Shift)
-Mouse = vec2(M1-M2,WheelU-WheelD)
-RF = R-F

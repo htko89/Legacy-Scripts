@@ -1,9 +1,0 @@
-@name Crowbar Aim
-@inputs 
-@outputs Fire Switch Equipped
-@persist 
-@trigger 
-runOnTick(1)
-Equipped=(owner():weapon():type():find("fist") ? 1 : 0)
-Fire=(Equipped&owner():keyAttack1() ? 1 : 0)
-Switch=(Equipped&owner():keyAttack2() ? 1 : 0)

@@ -1,9 +1,0 @@
-@name LS Delta
-@inputs Energy Air Coolant 
-@outputs [EnergyDelta AirDelta CoolantDelta]:number
-@persist 
-@trigger 
-
-EnergyDelta=$Energy
-AirDelta=$Air
-CoolantDelta=$Coolant

@@ -1,7 +1,0 @@
-@name 
-@inputs N
-@outputs N2
-@persist 
-@trigger all
-runOnTick(1)
-N2=(N ? 0 : 1)*107

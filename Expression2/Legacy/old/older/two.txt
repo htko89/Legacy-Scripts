@@ -1,8 +1,0 @@
-@name Two
-@inputs One:wirelink
-@outputs OneArray:array Woot:number
-@persist 
-@trigger 
-runOnTick(1)
-
-Woot=1233
