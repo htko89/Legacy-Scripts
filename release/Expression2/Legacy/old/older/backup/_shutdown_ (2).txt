@@ -1,0 +1,60 @@
+@name Central Command Keyboard Filter
+@inputs Run:number Reset:number
+@inputs Char:number
+@outputs Mask:string Result:number
+@persist Mask:string Result:number #Persistent outputs.
+@persist PassWord:string PassLength:number CharLength:number #System.
+@persist Typed:string TypedLength:number Clear:number #Memory.
+@trigger all
+
+if(first()){
+    #Initialization.
+        signalSetGroup("CentralCommand")
+        runOnSignal("CC",0,1)
+    #Type options.
+        PassWord="carbon89se"
+        PassLength=PassWord:length()
+        CharLength=15
+}
+
+#Trigger off.
+Result=0
+
+#Keyboard filtering.
+if(~Char&Char){ #If triggered by a keypress.
+    if((Char>=48&Char<=57)|(Char>=97&Char<=122)|Char==127|Char==13){ #Filter within type-able limits.
+        if(Char==13){ #If return was pressed.
+            if(TypedLength==PassLength){ #Check for correct length.
+                Result=Typed:find(PassWord) #Return 1 for correct.
+                Clear=1
+            }else{
+                Result=2 #Return 2 for incorrect.
+                Clear=1
+            }
+        }elseif(Char==127){ #If delete key is pressed.
+            Result=3 #Return 3 for deleted.
+            Clear=1
+        }else{ #If any other key is pressed.
+            if(TypedLength<CharLength){ #If below char length.
+            Typed+=toChar(Char) #Add to type memory.
+            TypedLength=Typed:length() #Set new length.
+            Mask+="*" #Add asterisk
+            Result=4 #Return 4 for typing.
+            }
+        }
+    }
+}
+
+if(Clear){ #If reset is true
+    Typed="" #Clear type memory.
+    TypedLength=0 #Clear length.
+    Mask="" #Clear mask.
+    Clear=0
+}
+
+if(Reset|!Run){ #If reset is true
+    Result=0
+    Typed="" #Clear type memory.
+    TypedLength=0 #Clear length.
+    Mask="" #Clear mask.
+}

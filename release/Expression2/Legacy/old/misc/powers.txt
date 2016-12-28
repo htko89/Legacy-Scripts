@@ -1,0 +1,28 @@
+@name Powers
+@inputs Cache:wirelink Power
+@outputs Energy Coolant Air
+@persist [EAmt MEAmt]:number
+@persist [CAmt MCAmt]:number
+@persist [AAmt MAAmt]:number
+@persist [EThres]:number
+@trigger 
+
+runOnTick(1)
+
+EAmt=Cache["Energy",number]
+MEAmt=Cache["Max Energy",number]-1000
+CAmt=Cache["Coolant",number]
+MCAmt=Cache["Max Coolant",number]-500
+AAmt=Cache["Air",number]
+MAAmt=Cache["Max Air",number]-500
+EThres=850
+
+if(Power){
+    Energy=(EAmt<MEAmt ? 1 : 0)
+    Coolant=(EAmt>EThres&CAmt<MCAmt ? 1 : 0)
+    Air=(EAmt>EThres&AAmt<MAAmt ? 1 : 0)
+}else{
+    Energy=0
+    Coolant=0
+    Air=0
+}

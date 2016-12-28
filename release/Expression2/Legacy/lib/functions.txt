@@ -1,0 +1,80 @@
+@name lib/functions
+@outputs [Sys SysStat Mine MineStat]:array [SyncNum]:number
+@persist [Sync]:gtable [Key]:string [ID]:number
+@persist [Core]:entity
+
+if(first()){
+    function number gtable:init(Key:string){
+        This     = gTable(Key,0)
+        local Ar = This[Key,array]
+        if(!Ar[1,string]){
+            This[Key,array] = array()
+            Ar = This[Key,array]
+            Ar[1,string] = Ar:id()
+        }
+        if(Ar:id()==Sync[Key,array]:id()){
+            return 1
+        }else{
+            return 0
+        }
+    }
+    function void initsync(){
+        Sync=gTable(Key,0)
+        #Create Sys if nonexistent
+        if(!Sync[Key,string]){
+            Sync:clear()
+            #Add other arrays here
+            Sync[1,array]=array()
+            Sync[2,array]=array()
+            Sync[3,array]=array()
+            Sync[4,array]=array()
+            Sync[Key,string]=Sync[1,array]:id()
+            hint("Init Arrays",4)
+        }
+        #Set Array Variables
+        Sys      = Sync[1,array]
+        SysStat  = Sync[2,array]
+        Mine     = Sync[3,array]
+        MineStat = Sync[4,array]
+        #Use first array to check connection
+        if(Sync[Key,string]==Sys:id()){
+            hint("Init Success",4)
+        }else{
+            hint("Init Failed",4)
+            hint(Sync[Key,string],4)
+            hint(Sys:id(),4)
+        }
+    }
+    function number findsync(Ar:array){
+        local Find = 0
+        if(Ar:count()>0){
+            for(Loop=1, Ar:count()){
+                if(Ar[Loop,entity]==Core){
+                    Find = Loop
+                }
+            }
+        }
+        return Find
+    }
+    function void sync(Ar:array, N2:number){
+        local Result = findsync(Ar)
+        if(N2){
+            if(Result){
+                SyncNum=Result
+                hint("Resync Success: "+Result,4)
+            }else{
+                Ar:pushEntity(Core)
+                SyncNum=Ar:count()
+                hint("Sync Success: "+SyncNum,4)
+            }
+        }else{
+            if(Result){
+                SyncNum=Result
+                Ar:remove(SyncNum)
+                hint("Desync Success: "+Result,4)
+            }else{
+                hint("Desync Failed: "+Result,4)
+            }
+        }
+    }
+}

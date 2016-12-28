@@ -1,0 +1,55 @@
+@name World Controller
+@inputs [Cam Eye Pod Ent EGP]:wirelink
+@inputs [Active Cycle]:number
+@outputs [Mode Type]:number [Entity]:entity
+@outputs [Zoom]:number [Angle]:angle
+@persist [Core Owner Holo]:entity
+@trigger Active
+
+if(first()){
+    function vector followPos(E:entity){
+        return E:pos()-E:forward()*64+E:up()*32
+    }
+    function angle followAng(E:entity){
+        return (E:pos()-Holo:pos()):toAngle()
+    }
+    function resetHolo(){
+        holoAng(1,Core:forward():toAngle())
+        holoPos(1,Core:pos())
+    }
+}
+if(first()){
+    runOnTick(1)
+    Core = entity():isWeldedTo()
+    Owner = owner()
+    Holo = holoCreate(1)
+    resetHolo()
+    Cam["Parent",entity] = Holo
+    Cam["Position",vector] = Holo:pos()
+    Cam["Angle",angle] = Holo:angles()
+        Cam["Activated",number]=0
+}
+if(~Active){
+    resetHolo()
+    Cam["Activated",number] = Active
+    Eye["Enable",number] = Active
+    Mode = 0
+    Type = 0
+}
+if(~Cycle&Cycle){
+    Mode=(Mode>=3 ? 0 : Mode+1)
+    Trigger = 1
+}
+     if(Mode==0){
+    #Mode 0 = Free look
+}elseif(Mode==1){
+    #Mode 1 = Free rotate + follow
+}elseif(Mode==2){
+    #Mode 2 = Follow
+}elseif(Mode==3){
+    #Mode 3 = Eye
+}
+
+#Type 0 = Free entity
+#Type 1 = Players
+#Type 2 = E2's

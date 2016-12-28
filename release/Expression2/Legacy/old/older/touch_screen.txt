@@ -1,0 +1,41 @@
+@name Touch Screen
+@inputs Screen:entity EGP:wirelink
+@outputs 
+@persist [Cursor Players Click]:array Elements:number
+@trigger 
+runOnTick(1)
+Players=players()
+if(first()){
+    EGP:egpDrawTopLeft(1) 
+    EGP:egpRoundedBox(1,vec2(50,50),vec2(200,50))
+    EGP:egpRoundedBox(2,vec2(50,120),vec2(200,50))
+    Elements=2
+    EGP:egpText(96,"Multiplayer Touchscreen. "+egpMaxUmsgPerSecond()+" FPS.",vec2(10,0)) 
+    EGP:egpText(97,"(More than one player can interact with touch screen)",vec2(10,16))
+    EGP:egpPoly(98,vec2(0,0),vec2(24,0),vec2(0,24))
+    EGP:egpColor(98,vec(40,40,40))
+    EGP:egpPoly(99,vec2(2,2),vec2(19,2),vec2(2,19))
+    EGP:egpColor(99,vec(255,136,0))
+    EGP:egpParentToCursor(98)
+    EGP:egpParentToCursor(99)
+}
+for(Loop=1, Elements){
+    EGP:egpColor(Loop,vec(255,255,255))
+} Loop=0
+for(Loop=1, Elements){
+    Click[Loop,number]=0
+} Loop=0
+for(Loop=1, Players:count()){
+    if(Players[Loop,entity]:aimEntity()==(Screen ? Screen : entity():isWeldedTo())){
+        Cursor[Loop,vector2]=EGP:egpCursor(Players[Loop,entity])
+        for(Loop2=1, Elements){
+            if(inrange(Cursor[Loop,vector2],EGP:egpPos(Loop2),EGP:egpPos(Loop2)+EGP:egpSize(Loop2))){
+                EGP:egpColor(Loop2,vec(80,80,80))
+                if(Players[Loop,entity]:keyAttack1()){
+                    EGP:egpColor(Loop2,vec(255,0,0))
+                    Click[Loop2,number]=1
+                }
+            }
+        } Loop2=0
+    }
+} Loop=0

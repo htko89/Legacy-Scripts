@@ -1,0 +1,74 @@
+@name Hull
+@inputs [Raw Product Cache]:wirelink [PodActive WheelUp WheelDown M1 M2 R F]:number
+@outputs [Refine Mine Fire Life Multiplier Freeze]:number
+@outputs [ABlueIce AClearIce AGlacialMass AWhiteGlaze ADarkGlitter AGelidus AKrystallos]:number
+@outputs [BSC BHydrogenIsotopes BNitrogenIsotopes BOxygenIsotopes BHeliumIsotopes BLiquidOzone BHeavyWater]:number
+@outputs [CEnergy CCoolant CAir]:number
+@persist [FullMultiplier PowerOn CamMode]:number
+@trigger PodActive WheelUp WheelDown M1 M2 R F
+
+interval(1000)
+
+Freeze=abs(PodActive-1)
+if(clk()){
+    ABlueIce=Raw["Blue Ice",number]/Raw["Max Blue Ice",number]
+    AClearIce=Raw["Clear Ice",number]/Raw["Max Clear Ice",number]
+    AGlacialMass=Raw["Glacial Mass",number]/Raw["Max Glacial Mass",number]
+    AWhiteGlaze=Raw["White Glaze",number]/Raw["Max White Glaze",number]
+    ADarkGlitter=Raw["Dark Glitter",number]/Raw["Max Dark Glitter",number]
+    AGelidus=Raw["Gelidus",number]/Raw["Max Gelidus",number]
+    AKrystallos=Raw["Krystallos",number]/Raw["Max Krystallos",number]
+    BSC=Product["Strontium Clathrates",number]/Product["Max Strontium Clathrates",number]
+    BHydrogenIsotopes=Product["Hydrogen Isotopes",number]/Product["Max Hydrogen Isotopes",number]
+    BNitrogenIsotopes=Product["Nitrogen Isotopes",number]/Product["Max Nitrogen Isotopes",number]
+    BOxygenIsotopes=Product["Oxygen Isotopes",number]/Product["Max Oxygen Isotopes",number]
+    BHeliumIsotopes=Product["Helium Isotopes",number]/Product["Max Helium Isotopes",number]
+    BLiquidOzone=Product["Liquid Ozone",number]/Product["Max Liquid Ozone",number]
+    BHeavyWater=Product["Heavy Water",number]
+    CEnergy=Cache["Energy",number]
+    CCoolant=Cache["Coolant",number]
+    CAir=Cache["Air",number]
+}
+if(clk()){
+    if(CEnergy>=4000&(ABlueIce+AClearIce+AGlacialMass+AWhiteGlaze+ADarkGlitter+AGelidus+AKrystallos)){
+        Refine=1
+    }else{
+        Refine=0
+    }
+    if(CEnergy&CEnergy&CAir&owner():pos():distance(entity():pos())<=700&!PodActive){
+        Life=1
+    }else{
+        Life=0
+    }
+}
+if(~WheelUp&WheelUp){
+    FullMultiplier+=50
+}
+if(~WheelDown&WheelDown&FullMultiplier>=50){
+    FullMultiplier-=50
+}
+if(~M1&M1){
+    timer("Fire",6000)
+    Multiplier=1
+}
+if(clk("Fire")&M1){
+    PowerOn=1
+}
+if(!M1){
+    PowerOn=0
+}
+if(PowerOn){
+    Multiplier=FullMultiplier
+}else{
+    Multiplier=1
+}
+Fire=M1
+if(~M2&M2){
+    if(!Mine&CEnergy>=4000){Mine=1}else{Mine=0}
+}
+if(~R&R){
+    if(Refine){Refine=0}else{Refine=1}
+}
+if(~F&F){
+    if(Life){Life=0}else{Life=1}
+}

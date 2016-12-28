@@ -1,0 +1,113 @@
+##Setup E2
+
+#Name
+@name Miner
+
+#I/O
+@inputs [Pod Eye Cam Ent EGP]:wirelink
+
+#Var
+@persist [Core Ice]:entity [BaseCode]:number
+
+#gTable Data
+@persist [System]:gtable
+@persist [Info]:table [BaseList BaseStat MinerList IceList IceStat]:array
+
+#E2 Data
+@trigger none
+@model models/Slyfo/interior_footlockerlid.mdl
+
+##End Setup E2
+
+
+##Start Init
+
+#Set States
+runOnLast(1)
+
+if(dupefinished()){ #Duped
+    reset()
+} 
+
+if(first()){ #Init E2
+    
+    #Init Data Signal
+    dsJoinGroup("Miner") 
+    dsSetScope(1)
+    
+    #Init gTable
+    System=gTable("System",0)
+    
+    #Get Data
+    Info=System["Info",table]
+    BaseList=System["BaseList",array]
+    BaseStat=System["BaseStat",array]
+    MinerList=System["MinerList",array]
+    IceList=System["IceList",array]
+    IceStat=System["IceStat",array]
+        
+    #Set Var
+    Core=entity():isWeldedTo()
+    
+    #Init Data
+    #poop=wut
+    
+    #Create Functions
+    function void addMiner(){
+        MinerList:pushEntity(Core)
+        print("Miner:",time("sec"),"Miners:",MinerList:count())
+    }
+    function void remMiner(){
+        for(Loop=1,MinerList:count()){
+            if(MinerList[Loop,entity]==Core){
+                MinerList:remove(Loop)
+            }
+        } Loop=0
+    }
+    function void addIce(){
+        Ice=IceList[1,entity]
+        IceList:remove(1)
+        IceStat:pushEntity(Ice)
+    }
+    function void remIce(){
+        Ice=noentity()
+        for(Loop=1,IceStat:count()){
+            if(IceStat[Loop,entity]==Ice){
+                IceStat:remove(Loop)
+            }
+        } Loop=0
+    }
+    function void setBase(N){
+        BaseStat[N,number]=1
+    }
+    function void remBase(N){
+        BaseStat[N,number]=0
+    }
+    
+    #Debug
+    print("Miner:",time("sec"),Info:id())
+    
+}
+
+##End Init
+
+
+##Start E2
+
+if(dsClk("Reset")){ #Reset
+    reset()
+}
+
+if(first()){ #First
+    addMiner()
+    dsSend("Event","Base",0)
+}
+
+if(last()){ #Last
+    remMiner()
+    remIce()
+    remBase(BaseCode)
+    dsSend("Event","Base",0)
+}
+
+##End E2

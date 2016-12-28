@@ -1,0 +1,5 @@
+@name Ring Core
+@inputs [Raw Product Cache]:wirelink
+@inputs [Probe]:wirelink
+@inputs [Ion Missile1 Missile2 Missile3 Missile4]:wirelink
+@outputs [Mine Refine IonFire IonMult MissileFire ProbeOn]:number [MissileVector]:vector

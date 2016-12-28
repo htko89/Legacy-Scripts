@@ -1,0 +1,149 @@
+@name Base Control
+#I/O
+@inputs [Ent]:wirelink
+@inputs [CDoor GDoor CBlinds GBlinds]:number
+@outputs [Whitelist]:array
+#Door
+@inputs [D1 D2 D3 D4]:number
+@inputs [D1Ent D2Ent D3Ent D4Ent]:entity
+@outputs [D1Open D2Open D3Open D4Open]:number
+@persist [DoorTime]:number [Msg]:string
+#Blinds
+@persist [CAlpha CAlphaStep]:number
+@persist [GAlpha GAlphaStep]:number
+@persist [AlphaStep AlphaTime]:number
+@trigger
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    runOnTick(1)
+    #Function Preset
+    AlphaStep=10
+    AlphaTime=50
+    Whitelist[1,string]="1xinfusion"
+    Whitelist[2,string]="Flyyte"
+    DoorTime=5000
+    Msg="You are not on this base's whitelist!"
+}
+
+#Doors
+if($D1){
+    Auth=0
+    for(Loop=1, Whitelist:count()){
+        if(D1Ent:name():find(Whitelist[Loop,string])){
+            Auth=1
+        }
+    }
+    if(Auth){
+        if(!D1Open){
+            D1Open=1
+            timer("D1",DoorTime)
+        }else{
+            D1Open=0
+            stoptimer("D1")
+        }
+    }else{
+        D1Ent:printColorDriver(Msg)
+    }
+}
+if($D2){
+    Auth=0
+    for(Loop=1, Whitelist:count()){
+        if(D2Ent:name():find(Whitelist[Loop,string])){
+            Auth=1
+        }
+    }
+    if(Auth){
+        if(!D2Open){
+            D2Open=1
+            timer("D2",DoorTime)
+        }else{
+            D2Open=0
+            stoptimer("D2")
+        }
+    }else{
+        D2Ent:printColorDriver(Msg)
+    }
+}
+if($D3){
+    Auth=0
+    for(Loop=1, Whitelist:count()){
+        if(D3Ent:name():find(Whitelist[Loop,string])){
+            Auth=1
+        }
+    }
+    if(Auth){
+        if(!D3Open){
+            D3Open=1
+            timer("D3",DoorTime)
+        }else{
+            D3Open=0
+            stoptimer("D3")
+        }
+    }else{
+        D3Ent:printColorDriver(Msg)
+    }
+}
+if($D4){
+    Auth=0
+    for(Loop=1, Whitelist:count()){
+        if(D4Ent:name():find(Whitelist[Loop,string])){
+            Auth=1
+        }
+    }
+    if(Auth){
+        if(!D4Open){
+            D4Open=1
+            timer("D4",DoorTime)
+        }else{
+            D4Open=0
+            stoptimer("D4")
+        }
+    }else{
+        D4Ent:printColorDriver(Msg)
+    }
+}
+if(clk("D1")){
+    D1Open=0
+}
+if(clk("D2")){
+    D2Open=0
+}
+if(clk("D3")){
+    D3Open=0
+}
+if(clk("D4")){
+    D4Open=0
+}
+
+#Blinds
+if(~CBlinds|first()){
+    CAlphaStep=AlphaStep*(CBlinds ? 1 : -1)
+    timer("CAlpha", AlphaTime)
+}
+if(~GBlinds|first()){
+    GAlphaStep=AlphaStep*(GBlinds ? 1 : -1)
+    timer("GAlpha", AlphaTime)
+}
+if(clk("CAlpha")){
+    CAlpha=clamp(CAlpha+CAlphaStep,0,255)
+    Ent["Entity3",entity]:setAlpha(CAlpha)
+    Ent["Entity4",entity]:setAlpha(CAlpha)
+    if(CAlpha!=0&CAlpha!=255){
+        timer("CAlpha", AlphaTime)
+    }
+}
+if(clk("GAlpha")){
+    GAlpha=clamp(GAlpha+GAlphaStep,0,255)
+    Ent["Entity5",entity]:setAlpha(GAlpha)
+    Ent["Entity6",entity]:setAlpha(GAlpha)
+    if(GAlpha!=0&GAlpha!=255){
+        timer("GAlpha", AlphaTime)
+    }
+}
+#door , e2 mover/ storage / refinery placement / supply hose

@@ -1,0 +1,41 @@
+@name Anti Weapon
+@inputs [Active]:number
+@outputs [Equipped]:entity [Offending Offended]:number [Name]:string
+@persist Players:array Bomb:entity AbleToBomb:number [Weapon Search Action]:string
+@trigger 
+
+runOnTick(1)
+timer("Interval1",1000)
+
+if(first()){
+    Weapon="Vuvuzela"
+    Search="vuvuzela"
+    Action="using the "+Weapon
+    
+}
+if(clk("Interval1")){
+    Players=players()
+    for(Loop=1,Players:count()){
+        if(Players[Loop,entity]:weapon():type():find(Search)){
+            Equipped=Players[Loop,entity]
+        }
+    }
+    Equipped=(Equipped:weapon():type():find(Search) ? Equipped : noentity())
+    AbleToBomb=0
+}
+if(Equipped&(Equipped:keyAttack1()|Equipped:keyAttack2())){
+    Offending=1
+    timer("Interval2",10000)
+    AbleToBomb=1
+    if(AbleToBomb&Active){
+        Bomb=propSpawn("models/props_junk/gascan001a.mdl", Equipped:pos(), 0)
+        Bomb:propBreak()
+    }
+    Offended=1
+}else{
+    Offending=0
+}
+if(clk("Interval2")){
+    Offended=0
+}
+Name=Weapon+" Equipper:\n"+(!Equipped ? "Nobody" : Equipped:name()+",\n "+(Offending ? "is "+Action+"." : (Offended ? "was "+Action+" within the last 10 seconds" : "is not "+Action+".")))

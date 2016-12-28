@@ -1,0 +1,10 @@
+@name Move To Planet Center
+@inputs 
+@outputs
+@persist 
+@trigger 
+
+findByClass("logic_case")
+Ent=findClosest(entity():isWeldedTo():pos())
+entity():isWeldedTo():setPos(Ent:pos())
+entity():propDelete()

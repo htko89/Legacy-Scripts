@@ -1,0 +1,202 @@
+@name EGP Control 2
+
+#Var
+@persist [EGP1Sig EGP2Sig BaseSig MinerSig Group]:string [Scope]:number
+@persist [Owner]:entity
+@persist [First CellHeight Margin Min Max]:number
+@persist [TSize T1Height T2Height T3Height]:number
+@persist [ESize E1Height]:number
+@persist [MSize MAlpha Click]:number
+@persist [Red Orange Green]:vector
+@persist [AColor BColor CColor DColor]:vector
+
+#EGP Elements
+@persist [Control Data Text Element]:array [Mouse]:number
+@inputs [EGP]:wirelink [User]:entity
+
+#I/O
+@inputs [Whitelist]:array
+@outputs [Outputs]:array
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+First=first()
+if(First){
+    #Function Preset
+    Outputs[1,number]=1 #Authorisation
+    Outputs[2,number]=1 #Doors
+    Outputs[3,number]=0 #Blinds
+    Outputs[4,number]=1 #LS
+    Outputs[5,number]=1 #Power
+    Outputs[6,number]=1 #Refine
+    Outputs[7,number]=1 #Program
+    #Signal Var
+    EGP1Sig="EGP1"
+    EGP2Sig="EGP2"
+    BaseSig="Base"
+    MinerSig="Miner"
+    Group="Base"
+    Scope=0
+    signalSetGroup(Group)
+    runOnSignal(EGP2Sig,Scope,1)
+    #Var
+    Owner=owner()
+    CellHeight=30 #Height of cells
+    Margin=10
+    Min=0
+    Max=512
+    TSize=CellHeight/2.5 #Text Size. preferably 0.4x of Cellheight
+    T1Height=(CellHeight-TSize)/2 #Position Offsets
+    T2Height=(CellHeight-TSize*2)/3 #Position Offsets
+    T3Height=T2Height*2+TSize #Position Offsets
+    ESize=CellHeight/1.1 #Button Size
+    E1Height=(CellHeight-ESize/2)/2 #Position Offsets
+    MSize=5 #Mouse Size
+    MAlpha=200
+    Red=vec(255,0,0)
+    Orange=vec(255,150,0)
+    Green=vec(0,255,0)
+    AColor=vec(80,80,80)#vec(244,244,244) #box
+    BColor=vec(40,40,40)#vec(200,200,200) #bg
+    CColor=vec(200,200,200)#vec(100,100,100) #bgtext & boxoutline
+    DColor=vec(244,244,244)#vec(11,11,11) #boxtext
+}
+if(First){
+    #Define Controls
+    Index=0
+    Index++, Control[Index,string]="T1",      Data[Index,string]="Screen Controls"
+    Index++, Control[Index,string]="Box",     Data[Index,number]=1
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Authorisation"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+    Index++, Control[Index,string]="T1",      Data[Index,string]="Base Controls"
+    Index++, Control[Index,string]="Box",     Data[Index,number]=5
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Doors"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Blinds"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Life Support"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Fusion Reactors"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Ice Refinery"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+    Index++, Control[Index,string]="T1",      Data[Index,string]="Miner Controls"
+    Index++, Control[Index,string]="Box",     Data[Index,number]=1
+    Index++, Control[Index,string]="T2",      Data[Index,string]="Program"
+    Index++, Control[Index,string]="T3",      Data[Index,string]=""
+    Index++, Control[Index,string]="Element", Data[Index,string]=""
+}
+if(First){
+    #Init
+    EGP:egpDrawTopLeft(1), EGP:egpClear(), Text:clear(), Element:clear()
+    #Draw Objects
+    Cell=0, Index=0
+    Index++, EGP:egpBox(Index,vec2(Min,Min),vec2(Max,Max)), EGP:egpColor(Index,BColor)
+             EGP:entity():setColor(AColor)
+    for(Loop=1, Control:count()){
+        #[]# if(Control[Loop,string]=="T1"){
+            Index++, EGP:egpText(Index,Data[Loop,string],vec2(Margin*2,CellHeight*Cell+T1Height))
+                     EGP:egpSize(Index,TSize), EGP:egpColor(Index,CColor)
+            Cell++
+        }elseif(Control[Loop,string]=="Box"){
+            Index++, EGP:egpRoundedBox(Index,vec2(Margin,CellHeight*Cell),vec2(Max-Margin*2,CellHeight*Data[Loop,number]))
+                     EGP:egpColor(Index,AColor)
+            Index++, EGP:egpRoundedBoxOutline(Index,vec2(Margin,CellHeight*Cell),vec2(Max-Margin*2,CellHeight*Data[Loop,number]))
+                     EGP:egpColor(Index,CColor)
+        }elseif(Control[Loop,string]=="T2"){
+            if(Control[Loop-1,string]!="Box"){
+                Index++, EGP:egpLine(Index,vec2(Margin,CellHeight*Cell),vec2(Max-Margin,CellHeight*Cell))
+                         EGP:egpColor(Index,CColor)
+            }
+            Index++, EGP:egpText(Index,Data[Loop,string],vec2(Margin*2,CellHeight*Cell+T2Height))
+                     EGP:egpSize(Index,TSize), EGP:egpColor(Index,DColor)
+            Cell++
+        }elseif(Control[Loop,string]=="T3"){
+            Index++, EGP:egpText(Index,Data[Loop,string],vec2(Margin*2,CellHeight*(Cell-1)+T3Height))
+                     EGP:egpSize(Index,TSize), EGP:egpColor(Index,CColor), Text:pushNumber(Index)
+        }elseif(Control[Loop,string]=="Element"){
+            Index++, EGP:egpRoundedBox(Index,vec2(Max-Margin*2-ESize,CellHeight*(Cell-1)+E1Height),vec2(ESize,ESize/2))
+                     EGP:egpColor(Index,BColor), Element:pushNumber(Index)
+            Index++, EGP:egpRoundedBoxOutline(Index,vec2(Max-Margin*2-ESize,CellHeight*(Cell-1)+E1Height),vec2(ESize,ESize/2))
+                     EGP:egpColor(Index,CColor)
+        }
+    } Loop=0
+    Index++, EGP:egpCircle(Index,vec2(0,0),vec2(MSize,MSize))
+             EGP:egpColor(Index,DColor), EGP:egpAlpha(Index,MAlpha), EGP:egpParentToCursor(Index)
+    Index++, EGP:egpCircleOutline(Index,vec2(0,0),vec2(MSize,MSize))
+             EGP:egpColor(Index,AColor), EGP:egpAlpha(Index,MAlpha), EGP:egpParentToCursor(Index), Mouse=Index
+}
+if(First|(~User&User)){ 
+    Valid=0
+    if(Outputs[1,number]){
+        for(Loop=1, Whitelist:count()){
+            if(User:name():find(Whitelist[Loop,string])){
+                Valid=1
+            }
+        }
+    }else{
+        Valid=1
+    }
+    if(Valid|First){
+        EGP:egpColor(Mouse,Red)
+        for(Loop=1, Element:count()){
+            Index=Text[Loop,number]
+            Index2=Element[Loop,number]
+            if(Loop==2){
+                if(inrange(EGP:egpCursor(User),EGP:egpPos(Index2),EGP:egpPos(Index2)+EGP:egpSize(Index2))){
+                    Outputs[Loop,number]=(Outputs[Loop,number]<2 ? Outputs[Loop,number]+1 : 0)
+                    signalSend(BaseSig,Scope)
+                }
+            }elseif(Loop==7){
+                if(inrange(EGP:egpCursor(User),EGP:egpPos(Index2),EGP:egpPos(Index2)+EGP:egpSize(Index2))){
+                    Outputs[Loop,number]=(Outputs[Loop,number]<2 ? Outputs[Loop,number]+1 : 0)
+                    signalSend(MinerSig,Scope)
+                }
+            }else{
+                if(inrange(EGP:egpCursor(User),EGP:egpPos(Index2),EGP:egpPos(Index2)+EGP:egpSize(Index2))){
+                    Outputs[Loop,number]=(Outputs[Loop,number] ? 0 : 1)
+                    signalSend(BaseSig,Scope)
+                }
+            }
+            if(Loop==1){
+                EGP:egpSetText(Index,(Outputs[Loop,number] ? "Authorized Users Only" : "Open To Public"))
+                EGP:egpColor(Index2,(Outputs[Loop,number] ? Orange : Green))
+            }elseif(Loop==2){
+                if(Outputs[Loop,number]==0){
+                    EGP:egpSetText(Index,"Closed"), EGP:egpColor(Index2,Red)
+                }elseif(Outputs[Loop,number]==1){
+                    EGP:egpSetText(Index,"Authorized Users Only"), EGP:egpColor(Index2,Orange)
+                }elseif(Outputs[Loop,number]==2){
+                    EGP:egpSetText(Index,"Open To Public"), EGP:egpColor(Index2,Green)
+                }
+            }elseif(Loop==3){
+                EGP:egpSetText(Index,(Outputs[Loop,number] ? "Powered" : "Off"))
+                EGP:egpColor(Index2,(Outputs[Loop,number] ? Green : Red))
+            }elseif(Loop==7){
+                if(Outputs[Loop,number]==0){
+                    EGP:egpSetText(Index,"Off"), EGP:egpColor(Index2,Red)
+                }elseif(Outputs[Loop,number]==1){
+                    EGP:egpSetText(Index,"Mining"), EGP:egpColor(Index2,Green)
+                }elseif(Outputs[Loop,number]==2){
+                    EGP:egpSetText(Index,"Return to Base"), EGP:egpColor(Index2,Orange)
+                }
+            }else{
+                EGP:egpSetText(Index,(Outputs[Loop,number] ? "Automatic" : "Off"))
+                EGP:egpColor(Index2,(Outputs[Loop,number] ? Green : Red))
+            }
+        } Loop=0
+    }
+    
+}else{
+    EGP:egpColor(Mouse,AColor)
+}

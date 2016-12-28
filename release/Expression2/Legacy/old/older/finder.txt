@@ -1,0 +1,22 @@
+@name Finder
+@inputs 
+@outputs Cloak
+@persist Entity:entity
+@trigger 
+runOnTick(1)
+
+timer("Find",findUpdateRate()+100)
+if(clk("Find")){
+    if(findCanQuery()){
+        findExcludeEntities(owner():friends())
+        findExcludeEntity(owner())
+        findExcludePlayerProps(owner())
+        findInSphere(entity():pos(),1000)
+        Entity=find()
+    }else{
+        timer("Find",findUpdateRate()+100)
+    }
+}
+if(Entity){
+    Cloak= 0
+}else{Cloak = 1}

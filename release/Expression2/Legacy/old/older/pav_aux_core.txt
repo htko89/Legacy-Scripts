@@ -1,0 +1,59 @@
+#Name
+@name PAV Aux Core
+
+#Inputs
+@inputs [Cam Ent Hud Cache]:wirelink
+@inputs [PodActive Zoom]:number
+
+#Variables
+@persist [ShipCore]:entity [CamMode]:number
+
+#Trigger
+@trigger PodActive Zoom
+
+interval(1000)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    ShipCore=Ent["Entity1",entity]
+    Cam["Parent",entity]=ShipCore
+    CamMode=1
+    Gravity=1
+    ShipCore:setMass(50000)
+    for(Loop=1,ShipCore:hasConstraints("Weld")){
+        ShipCore:isWeldedTo(Loop):setMass(100)
+    }
+}
+
+#Set Variables
+Forward=ShipCore:forward()
+Right=ShipCore:right()
+Up=ShipCore:up()
+ShipPosition=ShipCore:pos()
+
+#Camera Code
+Cam["Activated", number]=(PodActive ? 1 : 0)
+if(~Zoom&Zoom){
+    CamMode=(CamMode<4? CamMode+1 : 1)
+    
+}
+if((~Zoom&Zoom)|(~PodActive&PodActive)){
+    if(CamMode==1){
+        Cam["Position",vector]=ShipPosition-Forward*2000+Up*500
+        Cam["Direction",vector]=Forward*3000-Up*500
+    }elseif(CamMode==2){
+        Cam["Position",vector]=ShipPosition-Forward*2000-Up*250
+        Cam["Direction",vector]=Forward
+    }elseif(CamMode==3){
+        Cam["Position",vector]=ShipPosition+Forward*1750-Up*105
+        Cam["Direction",vector]=Forward
+    }elseif(CamMode==4){
+        Cam["Position",vector]=ShipPosition+Forward*500-Up*20
+        Cam["Direction",vector]=Forward*1.5-Up
+    }
+}

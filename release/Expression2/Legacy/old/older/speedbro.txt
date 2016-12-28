@@ -1,0 +1,9 @@
+@name SpeedBro
+@inputs 
+@outputs E:entity Vel:vector
+@persist
+runOnTick(1)
+findInSphere(entity():pos(),5000)
+findClipToClass("asgardbolt")
+E = find()
+Vel = E:vel()

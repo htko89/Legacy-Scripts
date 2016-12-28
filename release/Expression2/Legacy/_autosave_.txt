@@ -1,0 +1,42 @@
+@name Control
+@inputs
+@outputs [Sys SysStat Mine MineStat]:array SyncNr:number
+@persist Sync:gtable Key:string Core:entity 
+@trigger 
+
+#include "lib/functions2"
+
+if(first()){
+    #E2 Code
+    runOnTick(1)
+    runOnLast(1)
+    #Default Variables
+    Core = entity()
+    Key = "Control"
+    #Set Arrays
+    Sync = initGt(Key)
+    Sys = Sync:initAr(1,50)
+    SysStat = Sync:initAr(2,50)
+    Mine = Sync:initAr(3,50)
+    MineStat = Sync:initAr(4,50)
+    #Sync
+    dsJoinGroup(Key)
+    Sys:clearAr()
+    SysStat:clearAr()
+    SyncNr = Sys:syncEt(Core)
+    SysStat[SyncNr,string] = "Sync Complete"
+    dsSend("Resync",Key,1)
+}
+
+if(dsClk("Resync")){
+    if(dsGetString()=="Sys"){
+        SyncNr = Sys:syncEt(Core)
+        SysStat[SyncNr,string] = "Resync Complete"
+    }
+}
+
+if(last()){
+    Sys:clearAr()
+    SysStat:clearAr()
+    dsSend("Resync",Key,"Sys")
+}

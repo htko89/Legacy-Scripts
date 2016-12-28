@@ -1,0 +1,115 @@
+@name Node Creation Alogorithm [by Flyyte]
+@inputs 
+@outputs I_1 I_2 Volume HoloCount Draw Shell TIME
+@persist [T_node Nodes D R E]:array
+@persist DrawNodes PS Spacing 
+@trigger 
+
+interval(20)
+timer("sec",1000)
+runOnLast(1)
+
+if(first())
+{
+    Volume = 5200
+    Spacing = 500
+    I_1 = 1
+    I_2 = 1
+    Draw = 1
+    PS = 1
+    Shell = 1
+
+    rangerFilter(entity())
+    rangerFilter(entity():isWeldedTo())
+    rangerFilter(players())
+    rangerPersist(1)
+    
+D[1,vector] = vec(0,1,0)
+D[2,vector] = vec(0,-1,0)
+D[3,vector] = vec(1,0,0)
+D[4,vector] = vec(-1,0,0)
+D[5,vector] = vec(0,0,1)
+D[6,vector] = vec(0,0,-1)
+
+D[7,vector] = vec(1,1,0)
+D[8,vector] = vec(-1,-1,0)
+D[9,vector] = vec(-1,1,0)
+D[10,vector] = vec(1,-1,0)
+D[11,vector] = vec(1,0,1)
+D[12,vector] = vec(-1,0,-1)
+D[13,vector] = vec(-1,0,1)
+D[14,vector] = vec(1,0,-1)
+D[15,vector] = vec(0,1,1)
+D[16,vector] = vec(0,-1,-1)
+D[17,vector] = vec(0,1,-1)
+D[18,vector] = vec(0,-1,1)
+D[19,vector] = vec(1,1,1)
+D[20,vector] = vec(-1,-1,-1)
+D[21,vector] = vec(-1,1,1)
+D[22,vector] = vec(1,-1,-1)
+D[23,vector] = vec(1,1,-1)
+D[24,vector] = vec(-1,-1,1)
+D[25,vector] = vec(-1,1,-1)
+D[26,vector] = vec(1,-1,1)
+
+}
+
+HoloCount = 30 - holoRemainingSpawns()
+
+TIME += clk("sec")
+
+if(I_1 < Volume)
+{
+    R_nohits = 0
+    for(I = 1,D:count())
+    {
+        R[I,ranger] = rangerOffset(entity():pos() + D[I_2,vector]*Shell*Spacing,(entity():pos() + D[I_2,vector]*Shell*Spacing) + D[I,vector]*Spacing)
+        if(R[I,ranger]:hit())
+        {
+            R_nohits = 0
+            break      
+        }
+        else
+        {
+            R_nohits = 1
+        }
+    }
+    
+    if(R_nohits)
+    {
+        Nodes[Nodes:count() + 1,vector] = entity():pos() + D[I_2,vector]*Shell*Spacing
+    }
+
+    I_1++
+    I_2++
+    I_2 = (I_1 % 27) + ((I_1 % 27)==0)
+    if( $I_2 <= -26 )
+    {
+        Shell++
+    }
+}
+else
+{
+    stoptimer("sec")
+    
+#[    if(PS)
+    {
+        E[E:count() + 1,entity] = propSpawn("models/props_phx/oildrum001_explosive.mdl",Nodes[Draw,vector],1)
+    }
+    
+    Draw += Draw <= Nodes:count()
+    
+    if(Draw > Nodes:count())
+    {
+        PS = 0
+    }
+]#
+}
+
+if(last())
+{
+    for( I = 1,E:count() )
+    {
+        E[I,entity]:propDelete()
+    }
+}

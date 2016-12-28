@@ -1,0 +1,9 @@
+@name GTABLEs
+@inputs [Active Fire]:number [Entity]:entity
+@persist Drone:gtable
+@trigger Active Entity Fire
+
+Drone=gTable("Drone",0)
+Drone[1,number]=Active
+Drone[2,number]=Fire
+Drone[3,entity]=Entity

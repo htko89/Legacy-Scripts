@@ -1,0 +1,12 @@
+@name Finder
+@inputs 
+@outputs
+@persist Props:array 
+@trigger 
+
+findByModel("models/props_c17/substation_stripebox01a.mdl")
+Props=findToArray()
+for(Loop=1,Props:count()){
+    Props[Loop,entity]:setColor(40,40,40)
+    Props[Loop,entity]:setAlpha(255)
+}

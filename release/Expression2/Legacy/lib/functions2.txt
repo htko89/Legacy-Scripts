@@ -1,0 +1,27 @@
+@name lib/functions2
+
+if(first()){
+    function gtable initGt(St1:string){
+        return gTable(St1,0)
+    }
+    function array gtable:initAr(Nr1:number,Nr2:number){
+            #Array creation
+        if(This[Nr1+Nr2,string]){   #if string exists
+            #Do Nothing
+        }else{                      #if the string doesn't exist
+            This[Nr1,array]         = array()               #Create array
+            This[Nr1+Nr2,string]    = This[Nr1,array]:id()  #Create string
+        }
+        return This[Nr1,array]  #return the array
+    }
+    function number array:syncEt(Et1:entity){
+        This:pushEntity(Et1)
+        hint(This:count():toString(),4)
+        return This:count()
+    }
+    function void array:clearAr(){
+        for(Loop=1,This:count()){
+            This:pop()
+        }
+    }
+}

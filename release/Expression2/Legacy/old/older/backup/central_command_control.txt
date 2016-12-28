@@ -1,0 +1,57 @@
+@name Central Command Keyboard Control
+@inputs Reset:number
+@inputs InUse:number Mask:string Result:array Display:array Door:array
+@outputs Boot:number Screen:string D1:number D2:number D3:number
+@outputs Boop:number
+@persist #Persistent i/o.
+@persist States:number Text:array Doors:number Loop:number #System.
+@trigger all
+
+if(first()){ #System first start.
+    #Display options.
+        States=5
+        Text[1,string]="Central Command"
+        Text[2,string]="Welcome."
+        Text[3,string]="Incorrect Password."
+        Text[4,string]="Screen Cleared!"
+        Text[5,string]="Password: \n"
+    #Door options.
+        Doors=3
+}
+
+Boot=0
+
+#Display.
+if(Display[1,number]==0){
+    Screen=Text[1,string]
+}elseif(Display[1,number]==1){
+    Screen=Text[2,string]
+}elseif(Display[1,number]==2){
+    Screen=Text[3,string]
+}elseif(Display[1,number]==3){
+    Screen=Text[4,string]
+}elseif(Display[1,number]==4){
+    Screen=Text[5,string]+Mask
+}
+
+#Booting.
+if(Result[1,number]==1){ #If correct.
+    Boot=1
+}elseif(Result[1,number]==2){ #If incorrect.
+    Boot=1
+}elseif(Result[1,number]==3){ #If deleted.
+    Boot=1
+}
+
+#Door.
+D1=Door[1,number]
+D2=Door[2,number]
+D3=Door[3,number]
+
+if(Reset){ #If reset is true
+    Screen=""
+    Boot=0
+    D1=0
+    D2=0
+    D3=0
+}

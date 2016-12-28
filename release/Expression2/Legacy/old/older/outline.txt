@@ -1,0 +1,9 @@
+@name outline
+@inputs EGP:wirelink
+@outputs 
+@persist 
+@trigger 
+
+EGP:egpDrawTopLeft(1)
+EGP:egpClear()
+EGP:egpBoxOutline(1,vec2(0,0),vec2(512,512))

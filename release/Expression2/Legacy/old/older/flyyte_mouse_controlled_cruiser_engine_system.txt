@@ -1,0 +1,64 @@
+@name Flyyte Mouse Controlled Cruiser Engine System
+@inputs Pod:wirelink Shp:entity Chr:entity Active
+@outputs Pitch Roll Yaw Speed Speed_L
+@persist Drv:entity Thrust P1 P R1 R
+@persist Fz F1z Tz Dz [Ta Da]:angle
+@persist Dv:vector C:array
+@trigger 
+
+interval(30)
+
+if(first()|dupefinished())
+{
+    Pod["Crosshairs",number] = 1
+    Pod["Allow Buttons",number] = 1
+    F1z = Shp:pos():z()
+    Fz = F1z
+    
+    
+    Speed_L = 0
+    
+    C = entity():getConstraints()
+    C[C:count() + 1,entity] = entity()
+    for ( I = 1,C:count() )
+    {
+        C[I,entity]:propGravity(0)
+    }
+}
+
+
+Pitch = -Shp:angles():pitch()
+Roll = Shp:angles():roll()
+Yaw = Shp:angles():yaw()
+
+Speed = Shp:vel():length()
+
+Drv = Shp:driver()
+
+W = Pod["W",number]
+A = Pod["A",number]
+S = Pod["S",number]
+D = Pod["D",number]
+Up = Pod["PrevWeapon",number]
+Dn = Pod["NextWeapon",number]
+Sh = Pod["Shift",number]
+Sp = Pod["Space",number]
+At = Pod["Alt",number]
+
+Speed_L += (Up-Dn)*10
+Speed_L = clamp(Speed_L,0,300)
+Thrust += (Speed_L - Thrust)/15
+
+if(clk())
+{
+
+    Dv = -Shp:vel()*Shp:mass()
+    
+    if(!Active)
+    {
+        Shp:applyForce(Dv)
+        Shp:applyTorque((vec((D-A)*30,(W-S)*30,0) - Shp:angVelVector())*Shp:inertia()*5)
+    }
+    
+}
+

@@ -1,0 +1,16 @@
+@name Base
+@inputs 
+@outputs 
+@persist [GTable]:gtable 
+@persist [Stations]:array
+@trigger 
+
+if(first()){
+    GTable = gTable("Data",0)
+    for(Loop = 1, 2){
+        GTable[Loop,array] = array()
+    } Loop = 0
+    Stations = GTable[1,array]
+    Drones = GTable[2,array]
+}
+

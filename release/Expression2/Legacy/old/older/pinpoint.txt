@@ -1,0 +1,33 @@
+@name PinPoint
+@inputs 
+@outputs 
+@persist [Owner E]:entity [TarVector]:vector
+@trigger 
+
+
+interval(10)
+
+if(dupefinished()){
+    reset()
+}
+
+if(first()){
+    Owner=owner()
+    E=entity()
+    E:setMass(50000)
+    E:setAlpha(0)
+}
+
+if(Owner:weapon():type()=="weapon_physgun"){
+    exit()
+}
+
+CurP=E:pos()
+TarVector=Owner:aimPos()-CurP
+A=TarVector:toAngle()
+TarQ = quat(A)
+CurQ = quat(E)
+Q = TarQ/CurQ
+V = E:toLocal(rotationVector(Q)+E:pos())
+E:applyTorque((250*V - 35*E:angVelVector())*E:inertia())  
+E:applyForce((TarVector+$TarVector)*E:mass()*10)

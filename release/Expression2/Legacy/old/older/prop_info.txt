@@ -1,0 +1,84 @@
+@name Prop Info
+@persist [Found]:number [Separator]:string
+@persist [Props Model Health Mass]:array
+@persist [Radius Volume]:array
+@persist [BoxSize BoxVol AABBSize AABBVol]:array
+@persist [BaseC TitleC ModelC HealthC MassC]:vector
+@persist [RadiusC VolumeC]:vector
+@persist [BoxSizeC BoxVolC AABBSizeC AABBVolC]:vector
+
+runOnChat(1)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+if(chatClk(owner())){
+    hideChat(0)
+    if(owner():lastSaid():lower()=="stats"|owner():lastSaid():lower()=="phys"){
+        hideChat(1)
+        findIncludePlayerProps(owner()) 
+        Found=findInSphere(entity():pos(),100000)
+        findSortByDistance(entity():pos())
+        Props=findToArray()
+        for(Loop=1, Props:count()){
+            Model[Loop,string]=Props[Loop,entity]:model()
+            Health[Loop,number]=round(Props[Loop,entity]:health())
+            Mass[Loop,number]=round(Props[Loop,entity]:mass())
+            Radius[Loop,number]=round(Props[Loop,entity]:radius())
+            Volume[Loop,number]=round(Props[Loop,entity]:volume())
+            BoxSize[Loop,vector]=round(Props[Loop,entity]:boxSize())
+            BoxVol[Loop,number]=round(BoxSize[Loop,vector]:x()*BoxSize[Loop,vector]:y()*BoxSize[Loop,vector]:z())
+            AABBSize[Loop,vector]=round(Props[Loop,entity]:aabbSize())
+            AABBVol[Loop,number]=round(AABBSize[Loop,vector]:x()*AABBSize[Loop,vector]:y()*AABBSize[Loop,vector]:z())
+        } Loop=0
+    }
+}
+if(first()){
+    BaseC=vec(255,255,255)
+    TitleC=vec(255,255,0)
+    ModelC=vec(20,20,20)
+    Separator="***************************************************************"
+}
+if(chatClk(owner())){
+    hideChat(0)
+    if(owner():lastSaid():lower()=="stats"){
+        hideChat(1)
+        printColor(" ")
+        printColor(TitleC,"Prop: ",BaseC,"Statistics.")
+        if(Found){
+            printColor(BaseC,"Health, Mass, Model.")
+            printColor(BaseC,Separator)
+            for(Loop=1, Props:count()){
+                HealthC=(Health:maxIndex()==Loop ? vec(0,255,0) : (Health:minIndex()==Loop ? vec(255,0,0) : BaseC))
+                MassC=(Mass:maxIndex()==Loop ? vec(0,255,0) : (Mass:minIndex()==Loop ? vec(255,0,0) : BaseC))
+                printColor(HealthC,Health[Loop,number],BaseC,", ",MassC,Mass[Loop,number],BaseC,", ",ModelC,Model[Loop,string])
+            }
+        }else{
+            printColor(vec(255,0,0),"Find function failed. Please retry.")
+        }
+        printColor(" ")
+    }
+    if(owner():lastSaid():lower()=="phys"){
+        hideChat(1)
+        printColor(" ")
+        printColor(TitleC,"Prop: ",BaseC,"Physical Info.")
+        if(Found){
+            printColor(BaseC,"Radius, Volume, BoxSize, BoxVol, AABBSize, AABBVol, Model.")
+            printColor(BaseC,Separator)
+            for(Loop=1, Props:count()){
+                RadiusC=(Radius:maxIndex()==Loop ? vec(0,255,0) : (Radius:minIndex()==Loop ? vec(255,0,0) : BaseC))
+                VolumeC=(Volume:maxIndex()==Loop ? vec(0,255,0) : (Volume:minIndex()==Loop ? vec(255,0,0) : BaseC))
+                BoxSizeC=BaseC
+                BoxVolC=(BoxVol:maxIndex()==Loop ? vec(0,255,0) : (BoxVol:minIndex()==Loop ? vec(255,0,0) : BaseC))
+                AABBSizeC=BaseC
+                AABBVolC=(AABBVol:maxIndex()==Loop ? vec(0,255,0) : (AABBVol:minIndex()==Loop ? vec(255,0,0) : BaseC))
+                printColor(RadiusC,Radius[Loop,number],BaseC,", ",VolumeC,Volume[Loop,number],BaseC,", ",BoxSizeC,BoxSize[Loop,vector]:toString(),BaseC,", ",BoxVolC,BoxVol[Loop,number],BaseC,", ",AABBSizeC,AABBSize[Loop,vector]:toString(),BaseC,", ",AABBVolC,AABBVol[Loop,number],BaseC,", ",ModelC,Model[Loop,string])
+            }
+        }else{
+            printColor(vec(255,0,0),"Find function failed. Please retry.")
+        }
+        printColor(" ")
+    }
+}
+    

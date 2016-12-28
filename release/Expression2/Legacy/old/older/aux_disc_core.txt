@@ -1,0 +1,138 @@
+#Name
+@name Aux Disc Core
+
+#Parented I/O
+@inputs [Raw Product]:wirelink
+@inputs [Ion Missile1 Missile2 Missile3 Missile4]:wirelink
+@outputs [Mine Refine IonFire IonMult MissileFire]:number [MissileEnt]:entity
+
+#Regular I/O
+@inputs [PodActive Zoom R M1 M2 PrevWeapon NextWeapon]:number
+@inputs [Pod Cam Cache Ent]:wirelink 
+@inputs [TargetEnt]:entity
+@outputs [Thrust]:number
+@persist [MinCache MinSpeed IonMultFull IonMultOn CamMode]:number
+@persist [ShipCore]:entity
+
+#Resource
+@persist [ABlueIce AClearIce AGlacialMass AWhiteGlaze ADarkGlitter AGelidus AKrystallos]:number
+@persist [BSC BHydrogenIsotopes BNitrogenIsotopes BOxygenIsotopes BHeliumIsotopes BLiquidOzone BHeavyWater]:number
+@outputs [CEnergy CCoolant CAir]:number
+
+#Triggers
+@trigger PodActive Zoom R M1 M2 PrevWeapon NextWeapon
+
+interval(1000)
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#Set Variables
+Forward=ShipCore:forward()
+Right=ShipCore:right()
+Up=ShipCore:up()
+ShipPosition=ShipCore:pos()
+
+#First
+if(first()){
+    #Variables
+    MinCache=1000
+    MinSpeed=100
+    IonMultFull=50
+    ShipCore=Ent["Entity1",entity]
+    Cam["Parent",entity]=ShipCore
+    Cam["Position",vector]=ShipCore:pos()-Forward*1800+Up*1000
+    Cam["Direction",vector]=+Forward*6-Up*2
+    CamMode=1
+}
+
+#Camera Code
+Cam["Activated", number]=(PodActive ? 1 : 0)
+if(~Zoom&Zoom){
+    CamMode=(!CamMode ? 1 : 0)
+}
+if(CamMode){
+    Cam["Position",vector]=ShipCore:pos()-Forward*1200+Up*400
+    Cam["Direction",vector]=+Forward*1200-Up*400
+}else{
+    Cam["Position",vector]=ShipCore:pos()+Up*1000
+    Cam["Direction",vector]=-Up
+}
+
+#Resource Info
+if(clk()){
+    ABlueIce=Raw["Blue Ice",number]/Raw["Max Blue Ice",number]
+    AClearIce=Raw["Clear Ice",number]/Raw["Max Clear Ice",number]
+    AGlacialMass=Raw["Glacial Mass",number]/Raw["Max Glacial Mass",number]
+    AWhiteGlaze=Raw["White Glaze",number]/Raw["Max White Glaze",number]
+    ADarkGlitter=Raw["Dark Glitter",number]/Raw["Max Dark Glitter",number]
+    AGelidus=Raw["Gelidus",number]/Raw["Max Gelidus",number]
+    AKrystallos=Raw["Krystallos",number]/Raw["Max Krystallos",number]
+}
+#[ if(clk()){
+    BSC=Product["Strontium Clathrates",number]/Product["Max Strontium Clathrates",number]
+    BHydrogenIsotopes=Product["Hydrogen Isotopes",number]/Product["Max Hydrogen Isotopes",number]
+    BNitrogenIsotopes=Product["Nitrogen Isotopes",number]/Product["Max Nitrogen Isotopes",number]
+    BOxygenIsotopes=Product["Oxygen Isotopes",number]/Product["Max Oxygen Isotopes",number]
+    BHeliumIsotopes=Product["Helium Isotopes",number]/Product["Max Helium Isotopes",number]
+    BLiquidOzone=Product["Liquid Ozone",number]/Product["Max Liquid Ozone",number]
+    BHeavyWater=Product["Heavy Water",number]
+} ]#
+if(clk()){
+    CEnergy=Cache["Energy",number]
+    CCoolant=Cache["Coolant",number]
+    CAir=Cache["Air",number]
+}
+
+#Refine Code
+if(clk()){
+    Refine=(CEnergy>=MinCache&(ABlueIce+AClearIce+AGlacialMass+AWhiteGlaze+ADarkGlitter+AGelidus+AKrystallos) ? 1 : 0)
+}
+
+#Mine Code
+if(~R&R){
+    Mine=(!Mine&CEnergy>=MinCache ? 1 : 0)
+}
+
+#IonMult
+if(~PrevWeapon&PrevWeapon){IonMultFull+=50}
+if(~NextWeapon&NextWeapon&IonMultFull>=50){IonMultFull-=50}
+
+#IonFire
+if(~M1&M1){timer("IonFire",8000), IonMult=1}
+if(clk("IonFire")&M1){IonMultOn=1}
+if(!M1){IonMultOn=0}
+IonMult=(IonMultOn ? IonMultFull : 1)
+IonFire=(M1&CEnergy>=MinCache&CCoolant>=MinCache ? 1 : 0)
+
+#MissileFire
+MissileFire=M2
+MissileEnt=TargetEnt
+
+#Ship Effects
+Thrust=PodActive
+
+if(~PodActive&PodActive){
+    StartSize=100
+    Length=1000
+    Color=vec(255,0,0)
+    Alpha=255
+    Material="trails/light"
+    Ent["Entity2",entity]:setTrails(StartSize,1,Length,Material,Color,Alpha)
+    Ent["Entity3",entity]:setTrails(StartSize,1,Length,Material,Color,Alpha) 
+    Ent["Entity4",entity]:setTrails(StartSize,1,Length,Material,Color,Alpha) 
+    Ent["Entity5",entity]:setTrails(StartSize,1,Length,Material,Color,Alpha) 
+    Ent["Entity6",entity]:setTrails(StartSize,1,Length,Material,Color,Alpha) 
+    Ent["Entity7",entity]:setTrails(StartSize,1,Length,Material,Color,Alpha) 
+}
+if(~PodActive&!PodActive){
+    Ent["Entity2",entity]:removeTrails() 
+    Ent["Entity3",entity]:removeTrails() 
+    Ent["Entity4",entity]:removeTrails() 
+    Ent["Entity5",entity]:removeTrails() 
+    Ent["Entity6",entity]:removeTrails() 
+    Ent["Entity7",entity]:removeTrails() 
+}
+    

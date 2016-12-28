@@ -1,0 +1,16 @@
+@name Control2
+@inputs 
+@outputs Table:table ID:string ID2:number
+@persist Sync:gtable
+@trigger 
+
+if(first()){
+    function void sync(){
+        Sync=gTable("Control",0)
+        ID=Sync[1,array]:id()
+        Sync[2,number]=1
+        ID2=Sync[2,number]
+    }
+}
+runOnTick(1)
+sync()

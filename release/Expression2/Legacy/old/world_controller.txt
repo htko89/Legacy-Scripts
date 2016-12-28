@@ -1,0 +1,101 @@
+@name World Controller
+@inputs [Pod Cam Eye Ent EGP]:wirelink
+@inputs [PW PA PS PD Shift Alt Space M1 M2 WheelU WheelD PR PF]:number
+@inputs [Active]:number
+@persist [Core1 Core2 Holo Entity]:entity 
+@persist [Pos]:vector [Ang]:angle [Speed]:number
+@persist [Ranger]:ranger
+@outputs [Tools]:array [ToolEnt]:entity [Tool]:number
+@outputs [Debug]:number
+@trigger all
+
+if(dupefinished()){ #Duped
+    reset()
+}
+
+if(first()){
+    #E2
+    runOnTick(1)
+    #Functions
+    function vector eForward(E:entity,N:number){
+        return E:forward()*N*Speed
+    }
+    function vector eRight(E:entity,N:number){
+        return E:right()*N*Speed
+    }
+    function vector eUp(E:entity,N:number){
+        return E:up()*N*Speed
+    }
+    function resetHolo(E:entity){
+        holoUnparent(1)
+        V = E:pos()
+        if(E!=Core1){
+            V = V-E:forward()*100+E:up()*64
+        }
+        A = (E:pos()-Holo:pos()):toAngle():setRoll(0)
+        if(E==Core1){
+            A = E:angles()
+        }
+        holoPos(1,V)
+        holoAng(1,A)
+    }
+    function resetCam(E:entity){
+        Cam["Parent",entity] = E
+        Cam["Angle",angle] = E:angles()
+        Cam["Position",vector] = E:pos()
+    }
+    #Settings
+    Holo = holoCreate(1)
+    Core1 = Ent["Entity1",entity]
+    Core2 = Ent["Entity2",entity]
+    Speed = 5
+    Tools = Ent["Entities",array]:clone()
+    Tools:remove(2)
+    Tools:remove(1)
+    Tool=0
+    #Set Cam
+    resetHolo(Core1)
+    resetCam(Holo)
+    #Set Ranger
+    rangerPersist(1)
+}
+
+if(~Active){
+    Cam["Activated",number] = Active
+    Eye["Enable",number] = Active
+}
+
+if(~Shift){
+    Speed = (Shift ? 15 : 5)
+}
+
+if(~WheelU|~WheelD){
+    if(WheelU){
+        Tool = (Tool<=0 ? Tools:count() : Tool-1)
+    }elseif(WheelD){
+        Tool = (Tool>=Tools:count() ? 0 : Tool+1)
+    }
+    ToolEnt = Tools[Tool,entity]
+}
+
+if(~PR&PR){
+    print("********************************")
+    print("Entity:", Ranger:entity())
+    print("Model:", Ranger:entity():model())
+    #print("Owner:", Ranger:entity():owner())
+    #print("HP:", Ranger:entity():health(),"Armor:", Ranger:entity():armor())
+    #print("Distance:", round(Ranger:distance()))
+    #print("Position:", round(Ranger:position(),3))
+    #print("Size:", Ranger:entity():radius())
+}
+
+if(tickClk()){
+    Debug = ops()
+    if(Active){
+        Ranger = rangerOffset(Holo:pos(),Holo:pos()+Holo:forward()*1000)
+        Pos = Holo:pos()
+        holoPos(1,Pos+eForward(Holo,PW-PS)+eRight(Holo,PD-PA)+eUp(Holo,Space-Alt))
+        Ang = Holo:angles()
+        holoAng(1,Ang+ang(-Eye["Y",number]/2,-Eye["X",number]/2,0))
+    }
+}   

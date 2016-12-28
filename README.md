@@ -2,7 +2,7 @@
 type: "folio"
 draft: false
 date: "2016-11-14"
-title: "Scripts Legacy"
+title: "Scripts - Legacy"
 parent: "personal"
 topics:
   - "code"

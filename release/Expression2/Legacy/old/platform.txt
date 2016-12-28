@@ -1,0 +1,41 @@
+@name Platform
+@inputs InTarget:entity Bomb:entity
+@outputs Target:entity Fire
+@persist [Players]:array [Chip Ent]:entity RangerData:ranger [FV ChipPos]:vector
+@persist [DesiredQuat CurrentQuat]:quaternion
+@persist [V TV FV2]:vector
+@trigger 
+@model models/hunter/plates/plate1x1.mdl
+runOnTick(1)
+Chip=entity()
+ChipPos=Chip:pos()
+RangerData=rangerOffset(ChipPos,ChipPos+Chip:up()*100)
+if(RangerData:entity()&!RangerData:entity():isPlayer()&!Ent){
+    Ent=RangerData:entity()
+}
+if(InTarget){
+    Target=InTarget
+}else{
+    timer("test",1000)
+}
+if(clk("test")){
+    findByModel("models/Slyfo/spacemine.mdl")
+    Target=find()
+}
+
+if(first()){
+    Fire=0
+}
+if(Ent){
+    FV=(owner():pos()+Chip:up()*100)-Ent:pos()
+    Ent:applyForce((10*FV+$FV*20)*Ent:mass())
+    FV2=Target:pos()-Bomb:pos()
+    Bomb:applyForce((10*FV2+$FV2*20)*Bomb:mass())
+    TV = Target:pos()+vec(0,0,60)-Ent:pos()
+    DesiredQuat = quat(TV:toAngle())
+    CurrentQuat = quat(Ent)
+    Q=DesiredQuat/CurrentQuat
+    V=Ent:toLocal(rotationVector(Q)+Ent:pos())
+    Ent:applyTorque((200*V-50*Ent:angVelVector())*Ent:inertia())
+}
+Fire = (Bomb ? 0 : 1)

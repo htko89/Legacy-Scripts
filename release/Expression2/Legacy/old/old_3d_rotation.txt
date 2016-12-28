@@ -1,0 +1,49 @@
+@name Old 3D rotation
+@inputs [Pod Eye Cam Ent]:wirelink
+@persist [DesiredQuat]:quaternion [V]:vector 
+@persist [ShipCore]:entity
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    runOnTick(1)
+    ShipCore=Ent["Entity1",entity]
+    ShipCore:setMass(10000)
+    for(Loop=1,ShipCore:hasConstraints("Weld")){
+        ShipCore:isWeldedTo(Loop):setMass(100)
+    }
+    Cam["Parent",entity]=ShipCore
+}
+
+#Set Quaternions
+CurrentQuat=quat(ShipCore)
+if(first()|!Pod["Active",number]){
+    DesiredQuat=CurrentQuat
+}
+
+#Controls
+Eye["Enable",number]=Pod["Active",number]
+Pitch=(Eye["Y",number])/3
+Yaw=(-Eye["X",number])/3
+Roll=(Pod["D",number]-Pod["A",number])*3
+
+#Create Rotation
+PitchQuat=qRotation(DesiredQuat:right(),Pitch)
+YawQuat=qRotation(DesiredQuat:up(),Yaw)
+RollQuat=qRotation(DesiredQuat:forward(),Roll) 
+DesiredQuat=(PitchQuat*YawQuat*RollQuat)*DesiredQuat
+
+#Movement
+Q=DesiredQuat/CurrentQuat
+V=ShipCore:toLocal(rotationVector(Q)+ShipCore:pos())
+ShipCore:applyTorque((200*V-50*ShipCore:angVelVector())*ShipCore:inertia())
+ShipCore:applyForce(-ShipCore:vel()*ShipCore:mass()/100)
+
+#Camera
+Cam["Activated",number]=Pod["Active",number]
+Cam["Angle",angle]=DesiredQuat:toAngle()
+Cam["Position",vector]=ShipCore:pos()+DesiredQuat:forward()*-540+DesiredQuat:up()*100

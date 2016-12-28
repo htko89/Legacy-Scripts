@@ -1,0 +1,11 @@
+@name Weight Test
+@inputs 
+@outputs Parent:entity [Position Direction]:vector
+@persist Parent:entity
+@trigger all
+
+runOnTick(1)
+
+Parent=owner()
+Position=Parent:pos()-Parent:eye()
+Direction=Parent:eye()

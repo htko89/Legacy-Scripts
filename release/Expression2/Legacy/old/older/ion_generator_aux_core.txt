@@ -1,0 +1,33 @@
+@name Ion Generator Aux Core
+#Power
+@inputs [Cache]:wirelink
+@outputs [Power Cool]:number
+
+#Stargate
+@inputs [Stargate]:wirelink
+@persist [Address]:string [Dial DialPos DialAddress]:number
+
+@trigger
+
+runOnTick(1)
+
+if(first()){
+    Stargate["Disable Autoclose",number]=1
+    Address="PLAT1X#"
+    Address:upper()
+}
+if(!Stargate["Active",number]){
+    Dial=1
+}
+if(Dial){
+    DialPos++
+    DialAddress=toByte(Address:index(DialPos))
+    DialAddress=(DialAddress<0 ? 13 : DialAddress)
+    if(DialPos>7){
+        Dial=0
+    }
+}else{
+    DialPos=0
+    DialAddress=0
+}
+Stargate["Dial Address",number]=DialAddress

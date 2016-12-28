@@ -1,0 +1,41 @@
+@name Crossbow_Camera_v3_by_NikoKun
+@inputs Cam:wirelink
+@persist Activated Found Ent:entity On
+
+# ==== Crossbow Camera ====
+# by NikoKun (aka Nik of the Wired)
+# Instructions:
+# Just spawn this chip, and spawn a Cam Controller. Use the
+# Wirelink Tool on the Cam Controller, and wire to the chip.
+# Now you have a redeemer-like crossbow! Enjoy!
+# Bonus: Try bouncing the bolt as many times as you can!
+
+interval(10) # Keeps the Cam smooth as possible
+
+On = owner():weapon():type()=="weapon_crossbow"
+# Only activates the chip/cam when crossbow is out
+
+if(On & $On){ timer("find",100) }
+
+# While crossbow out, search for the bolt, but only every 100 ticks
+# No need for more, limits finds, and is still smooth enough
+if(On & clk("find") & findCanQuery()){
+    findIncludePlayerProps(owner())
+    Found=findByClass("crossbow_bolt")
+    timer("find",100)
+}
+
+if(Found & $Found){
+    Ent=findResult(1)
+    Activated=1  # gives the Entity and toggles the cam
+}
+if(!Found & $Found){ Activated=0 } # deactivates the toggle
+
+Cam["Activated",number]=Activated # sends it to wirelink
+
+if(Ent!=noentity()){ # if it found bolt, send these to wirelink cam
+    Cam["Position",vector]=Ent:toWorld(vec(-20,0,0))
+    Cam["Direction",vector]=Ent:eye()
+    Cam["Velocity",vector]=Ent:vel()
+    Cam["Parent",entity]=Ent
+}

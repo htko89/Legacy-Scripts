@@ -1,0 +1,15 @@
+@name Pulser
+@inputs [Power Deployed]:number
+@outputs [Deploy Length Pop]:number 
+@persist 
+@trigger 
+if(!Deployed){
+    Deploy=0
+    timer("woot",20)
+}
+if(clk("woot")){
+    Deploy=Power
+}
+
+Length=10
+Pop=1

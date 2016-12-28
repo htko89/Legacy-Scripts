@@ -1,0 +1,17 @@
+@name Checker
+@inputs Entity:entity
+@outputs [Found1 Found2 Found3 Found4 Found10]:string
+@persist [Founded Found]:array
+@trigger 
+interval(500)
+findIncludeClass("ronon")
+Find=findInSphere(entity():pos(),8000)
+Founded=findToArray()
+for(Loop=1, Founded:count()){
+    Found[Loop,string]=Founded[Loop,entity]:type() 
+}
+Found1=Found[1,string]
+Found2=Found[2,string]
+Found3=Found[3,string]
+Found4=Found[4,string]
+Found10=Entity:type()

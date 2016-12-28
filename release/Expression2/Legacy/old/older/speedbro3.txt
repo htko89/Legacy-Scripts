@@ -1,0 +1,25 @@
+@name SpeedBro
+@inputs Ent:entity
+@outputs E:entity Vel:vector FirePos:vector Tes
+@persist I A:array
+runOnTick(1)
+
+findInSphere(entity():pos(),5000)
+findClipToClass("asgardbolt")
+#findClipToClass("staff_pulse")
+E = find()
+
+
+A[I,vector] = E:pos()
+I++
+
+Vel = (A[1,vector]-A[2,vector])*31.443
+
+#Vel = E:vel()
+
+if(I>2){I = 1}
+
+FirePos = Ent:pos()+vec(0,0,1000)
+
+
+Tes = 3333/106

@@ -1,0 +1,11 @@
+@name Fire
+@outputs OutFire:number OutEntity:entity
+@persist Fire:gtable
+@trigger 
+if(first()){
+    Fire=gTable("Fire",0)
+}
+runOnTick(1)
+OutFire=Fire[1,number]
+OutEntity=Fire[2,entity]
+

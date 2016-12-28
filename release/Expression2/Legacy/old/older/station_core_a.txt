@@ -1,0 +1,76 @@
+#Name
+@name Station Core a
+
+#Controls
+@inputs [Aux Pod Eye Cam Ent Finder]:wirelink
+@inputs [PodActive Reset]:number
+@outputs 
+
+#Ship and Waypoint
+@outputs [Ship ShipEnt ShipWaypoint]:array
+@outputs [WaypointPosition WaypointBusy WaypointAngle]:array
+@outputs [System]:array
+
+#Awareness
+@persist [BaseCore]:entity [BasePosition]:vector
+@persist [BaseForward BaseRight BaseUp]:vector
+
+@outputs [OutputArray]:array
+
+#Triggers
+@trigger Reset
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#Stop Resets
+ShipReset=0
+   
+#First Code
+if(first()){
+    runOnTick(1)
+    #Set Constants
+    BaseCore=Ent["Entity1",entity]    
+    BasePosition=BaseCore:pos()
+    BaseForward=BaseCore:forward()
+    #Waypoint and Holo
+    System[1,number]=5 #Base Waypoints
+    System[2,number]=4 #Actual Waypoints
+    System[5,number]=680 #Ship size
+    System[6,number]=80 #Ship Height
+    for(Loop=1,System[1,number]){
+        WaypointPosition[Loop,vector]=(BasePosition-BaseForward*System[5,number]*(System[1,number]-1))+(BaseForward*System[5,number]*Loop)
+        WaypointAngle[Loop,angle]=BaseForward:toAngle()
+        holoCreate(Loop,WaypointPosition[Loop,vector]+vec(0,0,System[6,number]/2),vec(1,1,1),BaseForward:toAngle(),vec(255, 155, 0))
+        holoShadow(Loop,0)
+        holoModel(Loop,"cone")
+        holoCreate(Loop+System[1,number]*1*Loop,WaypointPosition[Loop,vector]-BaseForward*(System[5,number]/4)+vec(0,0,System[6,number]/2),vec(1,1,0.5)-BaseForward*2.5,BaseForward:toAngle(),vec(40, 40, 40))
+        holoShadow(Loop+System[1,number]*1*Loop,0)
+        holoModel(Loop+System[1,number]*1*Loop,"cube")
+        holoCreate(Loop+System[1,number]*2*Loop,WaypointPosition[Loop,vector]+BaseForward*(System[5,number]/4)+vec(0,0,System[6,number]/2),vec(1,1,0.5)-BaseForward*2.5,BaseForward:toAngle(),vec(40, 40, 40))
+        holoShadow(Loop+System[1,number]*2*Loop,0)
+        holoModel(Loop+System[1,number]*2*Loop,"cube")
+    } Loop=0
+    #Set System Variables
+    System[3,number]=500 #Angle Distance
+    System[4,number]=20 #Max Speed
+}
+
+#Reset
+if(Reset){
+    ShipReset=1
+    reset()
+}
+#Reset Waypoints
+WaypointPosition[System[1,number]+1,vector]=Finder["1_Ent",entity]:pos()
+WaypointPosition[System[1,number]+2,vector]=Finder["2_Ent",entity]:pos()
+WaypointPosition[System[1,number]+3,vector]=Finder["3_Ent",entity]:pos()
+WaypointPosition[System[1,number]+4,vector]=Finder["4_Ent",entity]:pos()
+
+
+#Set Variables
+BaseForward=BaseCore:forward()
+BaseRight=BaseCore:right()
+BaseUp=BaseCore:up()

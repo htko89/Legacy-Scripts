@@ -1,0 +1,10 @@
+@name Vector Calculate
+@inputs Run:number Ent:entity
+@outputs TargetVec:vector
+@persist 
+@trigger
+interval(10)
+
+CenterPos=Ent:massCenter() #Get center of mass position.
+TargetPos=Ent:owner():aimPos()
+TargetVec=(TargetPos-CenterPos):normalized()

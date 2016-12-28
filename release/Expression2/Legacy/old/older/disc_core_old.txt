@@ -1,0 +1,88 @@
+#Name
+@name Disc Core
+
+#Wirelinks
+@inputs [Pod Cam Eye Ent]:wirelink
+
+#Variables
+@outputs [Angle AngleMult]:angle 
+@outputs [Control Pos PosMult PosVector Speed SpeedMult]:vector
+@outputs [Active]:number
+@outputs [ShipCore]:entity [Forward Right Up]:vector
+
+#Trigger
+@trigger none
+
+#Dupe Code
+if(dupefinished()){
+    reset()
+}
+
+#First Code
+if(first()){
+    runOnTick(1)
+    #Set variables
+    ShipCore=Ent["Entity1",entity]
+    Speed=vec(10,40,10)
+    SpeedMult=vec(1,1,1)
+    AngleMult=ang(0.4,0.4,0.4)
+    Eye["Enable", number]=1
+    Cam["Parent",entity]=ShipCore
+    Cam["Position",vector]=ShipCore:pos()-Forward*1800+Up*1000
+    Cam["Direction",vector]=+Forward*6-Up*2
+}
+
+#Set Variables
+Forward=ShipCore:forward()
+Right=ShipCore:right()
+Up=ShipCore:up()
+ShipPosition=ShipCore:pos()
+Active=Pod["Active",number]
+
+if(Active){
+    Cam["Activated", number]=1
+}else{
+    Cam["Activated", number]=0
+}
+
+if($Active&Active){
+    Cam["Position",vector]=ShipCore:pos()-Forward*1800+Up*1000
+    Cam["Direction",vector]=+Forward*6-Up*2
+}
+
+#Set Keyboard Control
+Control=vec(Pod["D",number]-Pod["A",number],Pod["W",number]-Pod["S",number],Pod["Space",number]-Pod["Shift",number])
+
+#Speed Control
+PosMult=(abs(Control:x()) ? PosMult+vec(SpeedMult:x(),0,0) : PosMult-vec(SpeedMult:x(),0,0))
+PosMult=(abs(Control:y()) ? PosMult+vec(0,SpeedMult:y(),0) : PosMult-vec(0,SpeedMult:y(),0))
+PosMult=(abs(Control:z()) ? PosMult+vec(0,0,SpeedMult:z()) : PosMult-vec(0,0,SpeedMult:z()))
+PosMult=clamp(PosMult,vec(0,0,0),Speed)
+
+#Position and Angle Control
+if(Active){
+    Pos+=Control:x()*(Right*PosMult:x())
+    Pos+=Control:y()*(Forward*PosMult:y())
+    Pos+=Control:z()*(Up*PosMult:z())
+    Angle+=ang(-Eye["Y",number]*AngleMult:pitch(),0,0)
+    Angle+=ang(0,-Eye["X",number]*AngleMult:yaw(),0)
+    Angle+=ang(0,0,-(Pod["TurnRightKey",number]-Pod["TurnLeftKey",number])*AngleMult:roll())
+    Angle=angnorm(Angle)
+}else{
+    Pos=ShipPosition
+    Angle=Forward:toAngle():setRoll(0)
+}
+
+ShipCore:propGravity(0)
+if(Pod["Active",number]){
+    ShipCore:propFreeze(0)
+    TarQ = quat(Angle)
+    CurQ = quat(ShipCore)
+    Q = TarQ/CurQ
+    V = ShipCore:toLocal(rotationVector(Q)+ShipPosition)
+    ShipCore:applyTorque((250*V - 35*ShipCore:angVelVector())*ShipCore:inertia())  
+    PosVector=Pos-ShipPosition
+    ShipCore:applyForce((PosVector+$PosVector*10)*ShipCore:mass())
+}else{
+    ShipCore:propFreeze(1)
+}
