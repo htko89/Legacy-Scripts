@@ -1,5 +1,5 @@
 ---
-type: "folio"
+type: "project"
 draft: false
 date: "2016-11-14"
 title: "Scripts Legacy"
