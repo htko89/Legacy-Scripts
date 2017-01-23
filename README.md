@@ -9,9 +9,6 @@ tools:
   - expression2
   - advdupe2
 code: 'https://github.com/htko89/scripts-legacy'
-photos:
-  - cover.jpg
-  - cover.jpg
 path: code/personal/scripts-legacy
 ---
 # Personal Project
