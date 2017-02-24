@@ -1,15 +1,12 @@
 ---
-type: project
-draft: false
-date: '2016-11-14'
 title: Scripts Legacy
-topics:
+date: '2016-11-14'
+code: 'https://github.com/htkoca/scripts-legacy'
+categories:
   - code
-tools:
+tags:
   - expression2
   - advdupe2
-code: 'https://github.com/htkoca/scripts-legacy'
-path: code/personal/scripts-legacy
 ---
 # Personal Project
 A collection of scripts for several esoteric languages.
